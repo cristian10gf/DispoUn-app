@@ -1,0 +1,56 @@
+name: dispoun_app
+description: "App para consultar disponibilidad de salones, horarios de profesores y materias de Uninorte"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  
+  # Estado reactivo y eficiente
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  
+  # Navegacion declarativa
+  go_router: ^14.8.1
+  
+  # Modelos inmutables con parsing JSON optimizado
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  
+  # Manejo de archivos
+  path_provider: ^2.1.5
+  file_picker: ^8.3.7
+  
+  # Operaciones eficientes en colecciones
+  collection: ^1.19.0
+  
+  # Formateo de fechas y horas
+  intl: ^0.20.2
+  
+  # Efectos de carga
+  shimmer: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  
+  # Generadores de codigo
+  build_runner: ^2.4.15
+  freezed: ^2.5.8
+  json_serializable: ^6.9.4
+  riverpod_generator: ^2.6.3
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/
