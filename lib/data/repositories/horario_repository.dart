@@ -184,6 +184,9 @@ class HorarioRepository {
     }
     return '';
   }
+
+  /// Obtiene el nombre del bloque para un salon
+  String getBloqueForSalon(String salon) => _getBloqueForSalon(salon);
 }
 
 /// Indice de horarios para busquedas rapidas

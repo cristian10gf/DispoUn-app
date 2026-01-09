@@ -13,6 +13,8 @@ class AppStrings {
   static const String save = 'Guardar';
   static const String search = 'Buscar';
   static const String noResults = 'Sin resultados';
+  static const String busquedaGlobal = 'Busqueda global';
+  static const String buscarTodo = 'Buscar materias, salones, profesores...';
   static const String noData = 'No hay datos disponibles';
 
   // Navegacion
@@ -112,6 +114,8 @@ class AppStrings {
   static const String horario = 'Horario';
   static const String horarioSemanal = 'Horario semanal';
   static const String sinHorario = 'Sin horario disponible';
+  static const String virtual = 'Virtual';
+  static const String presencial = 'Presencial';
 
   // NRC
   static const String nrc = 'NRC';

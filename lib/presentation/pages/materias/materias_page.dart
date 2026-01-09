@@ -23,6 +23,10 @@ class MateriasPage extends ConsumerWidget {
         title: const Text(AppStrings.materias),
         actions: [
           IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.push('/search'),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push('/settings'),
           ),

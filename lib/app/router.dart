@@ -9,6 +9,7 @@ import '../presentation/pages/materias/materias_page.dart';
 import '../presentation/pages/materias/materia_detail_page.dart';
 import '../presentation/pages/materias/nrc_detail_page.dart';
 import '../presentation/pages/materias/conjunto_page.dart';
+import '../presentation/pages/search/global_search_page.dart';
 import '../presentation/pages/settings/settings_page.dart';
 import '../presentation/pages/splash/splash_page.dart';
 import '../presentation/widgets/custom_bottom_nav.dart';
@@ -100,6 +101,11 @@ final appRouter = GoRouter(
       path: '/settings',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const SettingsPage(),
+    ),
+    GoRoute(
+      path: '/search',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const GlobalSearchPage(),
     ),
   ],
 );

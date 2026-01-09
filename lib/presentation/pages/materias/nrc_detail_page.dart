@@ -42,6 +42,9 @@ class NrcDetailPage extends ConsumerWidget {
       horasTotales += TimeUtils.calculateDurationHours(h.horaInicio, h.horaFin);
     }
 
+    // Verificar si todos los horarios son virtuales
+    final esVirtual = horarios.every((h) => h.esVirtual);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('NRC $nrc'),
@@ -66,24 +69,63 @@ class NrcDetailPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Codigo de conjunto
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      primerHorario.codigoConjunto,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                  // Codigo de conjunto y badge virtual
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          primerHorario.codigoConjunto,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      // Badge de Virtual/Presencial
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: esVirtual
+                              ? Colors.purple.withValues(alpha: 0.2)
+                              : Colors.green.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              esVirtual ? Icons.cloud : Icons.location_on,
+                              size: 12,
+                              color: esVirtual ? Colors.purple : Colors.green,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              esVirtual
+                                  ? AppStrings.virtual
+                                  : AppStrings.presencial,
+                              style: TextStyle(
+                                color: esVirtual ? Colors.purple : Colors.green,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
 
@@ -290,6 +332,7 @@ class NrcDetailPage extends ConsumerWidget {
       itemCount: horarios.length,
       itemBuilder: (context, index) {
         final h = horarios[index];
+        final sesionVirtual = h.esVirtual;
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
@@ -297,17 +340,21 @@ class NrcDetailPage extends ConsumerWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.primaryRed.withValues(alpha: 0.1),
+                color: sesionVirtual
+                    ? Colors.purple.withValues(alpha: 0.1)
+                    : AppColors.primaryRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
-                child: Text(
-                  h.dia.toString().toDiaCompleto().substring(0, 3),
-                  style: const TextStyle(
-                    color: AppColors.primaryRed,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: sesionVirtual
+                    ? const Icon(Icons.cloud, color: Colors.purple, size: 24)
+                    : Text(
+                        h.dia.toString().toDiaCompleto().substring(0, 3),
+                        style: const TextStyle(
+                          color: AppColors.primaryRed,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
             title: Text(
@@ -317,19 +364,50 @@ class NrcDetailPage extends ConsumerWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            subtitle: Text(
-              '${h.nombreSalon} - ${h.nombreBloque}',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
+            subtitle: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    sesionVirtual
+                        ? '${h.dia.toString().toDiaCompleto()} - ${AppStrings.virtual}'
+                        : '${h.nombreSalon} - ${h.nombreBloque}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                if (sesionVirtual)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      AppStrings.virtual,
+                      style: TextStyle(
+                        color: Colors.purple,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: AppColors.textTertiary,
-            ),
-            onTap: () =>
-                context.push('/salon/${Uri.encodeComponent(h.nombreSalon)}'),
+            trailing: sesionVirtual
+                ? null
+                : const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textTertiary,
+                  ),
+            onTap: sesionVirtual
+                ? null
+                : () =>
+                    context.push('/salon/${Uri.encodeComponent(h.nombreSalon)}'),
           ),
         );
       },

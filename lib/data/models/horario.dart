@@ -6,6 +6,8 @@ part 'horario.g.dart';
 /// Modelo principal que representa un horario de clase
 @freezed
 class Horario with _$Horario {
+  const Horario._();
+
   const factory Horario({
     @JsonKey(name: 'codigo_conjunto') required String codigoConjunto,
     @JsonKey(name: 'id_materia') required int idMateria,
@@ -31,4 +33,8 @@ class Horario with _$Horario {
 
   factory Horario.fromJson(Map<String, dynamic> json) =>
       _$HorarioFromJson(json);
+
+  /// Indica si la materia es virtual (salon NNS o dia Domingo)
+  bool get esVirtual =>
+      nombreSalon.toUpperCase() == 'NNS' || dia.toUpperCase() == 'D' || dia.toUpperCase() == 'S';
 }
