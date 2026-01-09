@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/strings.dart';
 import '../../../domain/providers/data_provider.dart';
+import '../../../domain/providers/mi_horario_provider.dart';
 import 'widgets/availability_filters.dart';
 import 'widgets/availability_table.dart';
+import 'widgets/mi_horario_section.dart';
 import 'widgets/stats_section.dart';
 
-/// Pagina principal - Disponibilidad de salones
+/// Pagina principal - Disponibilidad de salones y Mi Horario
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -24,7 +26,22 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+
+    // Verificar si debemos iniciar en Mi Horario
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInitialTab();
+    });
+  }
+
+  void _checkInitialTab() {
+    final miHorarioState = ref.read(miHorarioNotifierProvider);
+    if (miHorarioState.esPantallaPrincipal && miHorarioState.tieneNrcs) {
+      _tabController.animateTo(0);
+    } else {
+      // Default a Salones disponibles
+      _tabController.animateTo(1);
+    }
   }
 
   @override
@@ -52,7 +69,13 @@ class _HomePageState extends ConsumerState<HomePage>
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           tabs: const [
+            Tab(
+              icon: Icon(Icons.calendar_month_outlined),
+              text: AppStrings.miHorario,
+            ),
             Tab(
               icon: Icon(Icons.room_outlined),
               text: AppStrings.salonesDisponibles,
@@ -83,7 +106,11 @@ class _HomePageState extends ConsumerState<HomePage>
 
     return TabBarView(
       controller: _tabController,
-      children: [_buildDisponibilidadTab(), const StatsSection()],
+      children: [
+        const MiHorarioSection(),
+        _buildDisponibilidadTab(),
+        const StatsSection(),
+      ],
     );
   }
 
