@@ -148,24 +148,6 @@ class AvailabilityFilters extends ConsumerWidget {
               ref.read(availabilityFilterProvider.notifier).setBloque(value);
             },
           ),
-
-          const SizedBox(height: 16),
-
-          // Incluir ocupados
-          SwitchListTile(
-            title: const Text(
-              AppStrings.incluirNoDisponibles,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
-            ),
-            value: filter.incluirOcupados,
-            onChanged: (value) {
-              ref
-                  .read(availabilityFilterProvider.notifier)
-                  .setIncluirOcupados(value);
-            },
-            activeTrackColor: AppColors.primaryRed,
-            contentPadding: EdgeInsets.zero,
-          ),
         ],
       ),
     );

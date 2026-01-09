@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/horario_repository.dart';
 import 'data_provider.dart';
 
+/// Tipo de filtro de disponibilidad
+enum DisponibilidadFiltro { todos, disponibles, ocupados }
+
 /// Estado de los filtros de disponibilidad
 class AvailabilityFilterState {
   final String horaInicio;
@@ -10,6 +13,7 @@ class AvailabilityFilterState {
   final String dia;
   final String? bloque;
   final bool incluirOcupados;
+  final DisponibilidadFiltro disponibilidadFiltro;
 
   const AvailabilityFilterState({
     required this.horaInicio,
@@ -17,6 +21,7 @@ class AvailabilityFilterState {
     required this.dia,
     this.bloque,
     this.incluirOcupados = false,
+    this.disponibilidadFiltro = DisponibilidadFiltro.todos,
   });
 
   factory AvailabilityFilterState.defaultState() {
@@ -33,8 +38,8 @@ class AvailabilityFilterState {
   }
 
   static String _getDiaActual(int weekday) {
-    const dias = ['L', 'M', 'I', 'J', 'V', 'S', 'S'];
-    final index = (weekday - 1).clamp(0, 5);
+    const dias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final index = (weekday - 1).clamp(0, 6);
     return dias[index];
   }
 
@@ -44,6 +49,7 @@ class AvailabilityFilterState {
     String? dia,
     String? bloque,
     bool? incluirOcupados,
+    DisponibilidadFiltro? disponibilidadFiltro,
     bool clearBloque = false,
   }) {
     return AvailabilityFilterState(
@@ -52,6 +58,7 @@ class AvailabilityFilterState {
       dia: dia ?? this.dia,
       bloque: clearBloque ? null : (bloque ?? this.bloque),
       incluirOcupados: incluirOcupados ?? this.incluirOcupados,
+      disponibilidadFiltro: disponibilidadFiltro ?? this.disponibilidadFiltro,
     );
   }
 }
@@ -85,6 +92,10 @@ class AvailabilityFilterNotifier
     state = state.copyWith(incluirOcupados: incluir);
   }
 
+  void setDisponibilidadFiltro(DisponibilidadFiltro filtro) {
+    state = state.copyWith(disponibilidadFiltro: filtro);
+  }
+
   void reset() {
     state = AvailabilityFilterState.defaultState();
   }
@@ -96,6 +107,9 @@ final availabilityFilterProvider =
       (ref) => AvailabilityFilterNotifier(),
     );
 
+/// Nombres de bloques a excluir
+const _bloquesExcluidos = ['Bloque Sin Especificar', 'Sin Especificar', 'NNS'];
+
 /// Provider para los resultados de disponibilidad
 final salonesDisponiblesProvider = Provider<List<SalonDisponibilidad>>((ref) {
   final repo = ref.watch(repositoryProvider);
@@ -103,13 +117,55 @@ final salonesDisponiblesProvider = Provider<List<SalonDisponibilidad>>((ref) {
 
   if (repo == null) return [];
 
-  return repo.getSalonesDisponibles(
+  // Siempre incluir ocupados para poder filtrar despues
+  final todosLosSalones = repo.getSalonesDisponibles(
     horaInicio: filter.horaInicio,
     horaFin: filter.horaFin,
     dia: filter.dia,
     bloque: filter.bloque,
-    incluirOcupados: filter.incluirOcupados,
+    incluirOcupados: true,
   );
+
+  // Filtrar bloques sin especificar
+  var resultado = todosLosSalones.where((s) => !_bloquesExcluidos.any(
+        (excluido) => s.nombreBloque.toLowerCase().contains(excluido.toLowerCase()),
+      )).toList();
+
+  // Aplicar filtro de disponibilidad
+  switch (filter.disponibilidadFiltro) {
+    case DisponibilidadFiltro.disponibles:
+      resultado = resultado.where((s) => s.disponible).toList();
+      break;
+    case DisponibilidadFiltro.ocupados:
+      resultado = resultado.where((s) => !s.disponible).toList();
+      break;
+    case DisponibilidadFiltro.todos:
+      // No filtrar
+      break;
+  }
+
+  return resultado;
+});
+
+/// Provider para salones sin filtro de disponibilidad (para contar totales)
+final salonesDisponiblesSinFiltroProvider = Provider<List<SalonDisponibilidad>>((ref) {
+  final repo = ref.watch(repositoryProvider);
+  final filter = ref.watch(availabilityFilterProvider);
+
+  if (repo == null) return [];
+
+  final todosLosSalones = repo.getSalonesDisponibles(
+    horaInicio: filter.horaInicio,
+    horaFin: filter.horaFin,
+    dia: filter.dia,
+    bloque: filter.bloque,
+    incluirOcupados: true,
+  );
+
+  // Solo filtrar bloques sin especificar
+  return todosLosSalones.where((s) => !_bloquesExcluidos.any(
+        (excluido) => s.nombreBloque.toLowerCase().contains(excluido.toLowerCase()),
+      )).toList();
 });
 
 /// Provider para busqueda de profesores

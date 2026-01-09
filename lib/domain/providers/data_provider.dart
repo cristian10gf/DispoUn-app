@@ -225,10 +225,18 @@ final materiasListProvider = Provider<List<String>>((ref) {
   return repo?.materias ?? [];
 });
 
-/// Provider para la lista de bloques
+/// Nombres de bloques a excluir
+const _bloquesExcluidos = ['Bloque Sin Especificar', 'Sin Especificar', 'NNS'];
+
+/// Provider para la lista de bloques (excluyendo bloques sin especificar)
 final bloquesListProvider = Provider<List<String>>((ref) {
   final repo = ref.watch(repositoryProvider);
-  return repo?.bloques ?? [];
+  if (repo == null) return [];
+  return repo.bloques
+      .where((b) => !_bloquesExcluidos.any(
+            (excluido) => b.toLowerCase().contains(excluido.toLowerCase()),
+          ))
+      .toList();
 });
 
 /// Provider para la lista de salones

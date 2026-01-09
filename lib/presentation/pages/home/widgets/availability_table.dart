@@ -15,84 +15,122 @@ class AvailabilityTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final salones = ref.watch(salonesDisponiblesProvider);
+    final filtroActual = ref.watch(availabilityFilterProvider).disponibilidadFiltro;
 
-    if (salones.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.search_off, size: 48, color: AppColors.textTertiary),
-              const SizedBox(height: 16),
-              const Text(
-                AppStrings.noResults,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final disponibles = salones.where((s) => s.disponible).length;
-    final ocupados = salones.length - disponibles;
+    // Contar totales (sin filtro de disponibilidad)
+    final todosLosSalones = ref.watch(salonesDisponiblesSinFiltroProvider);
+    final totalDisponibles = todosLosSalones.where((s) => s.disponible).length;
+    final totalOcupados = todosLosSalones.length - totalDisponibles;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Resumen
+        // Selectores de filtro
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              _buildResumenChip(
-                '$disponibles ${AppStrings.salonDisponible}s',
-                AppColors.success,
+              _FilterChip(
+                label: '$totalDisponibles ${AppStrings.salonDisponible}s',
+                color: AppColors.success,
+                isSelected: filtroActual == DisponibilidadFiltro.disponibles,
+                onTap: () {
+                  final notifier = ref.read(availabilityFilterProvider.notifier);
+                  if (filtroActual == DisponibilidadFiltro.disponibles) {
+                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.todos);
+                  } else {
+                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.disponibles);
+                  }
+                },
               ),
               const SizedBox(width: 12),
-              _buildResumenChip(
-                '$ocupados ${AppStrings.salonOcupado}s',
-                AppColors.error,
+              _FilterChip(
+                label: '$totalOcupados ${AppStrings.salonOcupado}s',
+                color: AppColors.error,
+                isSelected: filtroActual == DisponibilidadFiltro.ocupados,
+                onTap: () {
+                  final notifier = ref.read(availabilityFilterProvider.notifier);
+                  if (filtroActual == DisponibilidadFiltro.ocupados) {
+                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.todos);
+                  } else {
+                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.ocupados);
+                  }
+                },
               ),
             ],
           ),
         ),
 
-        // Lista de salones
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: salones.length,
-            itemBuilder: (context, index) {
-              final salon = salones[index];
-              return _SalonTile(
-                salon: salon,
-                onTap: onSalonTap != null
-                    ? () => onSalonTap!(salon.nombreSalon)
-                    : null,
-              );
-            },
-          ),
-        ),
+        // Lista de salones o mensaje vacio
+        if (salones.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.search_off, size: 48, color: AppColors.textTertiary),
+                  SizedBox(height: 16),
+                  Text(
+                    AppStrings.noResults,
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...salones.map((salon) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SalonTile(
+                  salon: salon,
+                  onTap: onSalonTap != null
+                      ? () => onSalonTap!(salon.nombreSalon)
+                      : null,
+                ),
+              )),
+        const SizedBox(height: 16),
       ],
     );
   }
+}
 
-  Widget _buildResumenChip(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+/// Chip de filtro seleccionable
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: color,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

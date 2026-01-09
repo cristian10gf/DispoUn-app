@@ -88,35 +88,35 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Widget _buildDisponibilidadTab() {
-    return Column(
-      children: [
-        // Filtros (colapsables)
-        ExpansionTile(
-          initiallyExpanded: true,
-          title: const Text(
-            AppStrings.filtros,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Filtros (colapsables)
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: const Text(
+              AppStrings.filtros,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            leading: const Icon(Icons.filter_list, color: AppColors.primaryRed),
+            children: const [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: AvailabilityFilters(),
+              ),
+              SizedBox(height: 16),
+            ],
           ),
-          leading: const Icon(Icons.filter_list, color: AppColors.primaryRed),
-          children: const [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: AvailabilityFilters(),
-            ),
-            SizedBox(height: 16),
-          ],
-        ),
-        const Divider(),
-        // Tabla de resultados
-        Expanded(
-          child: AvailabilityTable(
+          const Divider(),
+          // Tabla de resultados (sin Expanded, genera los items directamente)
+          AvailabilityTable(
             onSalonTap: (salon) => context.push('/salon/$salon'),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -181,4 +181,3 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 }
-

@@ -67,7 +67,88 @@ class JsonParserService {
         debugPrint('Error parseando horario: $e');
       }
     }
-    return horarios;
+    // Unificar horarios duplicados que solo difieren en fecha
+    return _unificarHorariosDuplicados(horarios);
+  }
+
+  /// Genera una clave unica para un horario excluyendo las fechas
+  static String _generarClaveHorario(Horario h) {
+    return '${h.codigoConjunto}|${h.idMateria}|${h.nombreMateria}|'
+        '${h.departamento}|${h.nivel}|${h.nrc}|${h.grupo}|'
+        '${h.matriculados}|${h.cupos}|${h.modalidad}|'
+        '${h.nombreBloque}|${h.nombreSalon}|${h.piso ?? ""}|'
+        '${h.profesor}|${h.dia}|${h.horaInicio}|${h.horaFin}|${h.active}';
+  }
+
+  /// Unifica horarios duplicados que tienen todos los datos iguales
+  /// y solo difieren en la fecha (donde fecha_inicio == fecha_fin)
+  static List<Horario> _unificarHorariosDuplicados(List<Horario> horarios) {
+    // Agrupar horarios por clave (todos los campos menos fechas)
+    final grupos = <String, List<Horario>>{};
+
+    for (final horario in horarios) {
+      // Solo considerar para unificacion si es horario de un solo dia
+      final esDiaUnico = horario.fechaInicio == horario.fechaFin;
+
+      if (esDiaUnico) {
+        final clave = _generarClaveHorario(horario);
+        (grupos[clave] ??= []).add(horario);
+      } else {
+        // Si no es de un solo dia, agregarlo directamente sin unificar
+        // Usamos una clave unica para que no se agrupe
+        final claveUnica = '${_generarClaveHorario(horario)}|${horario.fechaInicio}|${horario.fechaFin}';
+        grupos[claveUnica] = [horario];
+      }
+    }
+
+    // Crear lista unificada
+    final resultado = <Horario>[];
+
+    for (final grupo in grupos.values) {
+      if (grupo.length == 1) {
+        // Solo hay uno, agregarlo tal cual
+        resultado.add(grupo.first);
+      } else {
+        // Hay multiples, unificarlos
+        resultado.add(_unificarGrupo(grupo));
+      }
+    }
+
+    return resultado;
+  }
+
+  /// Unifica un grupo de horarios tomando la fecha mas temprana y mas tardia
+  static Horario _unificarGrupo(List<Horario> grupo) {
+    // Ordenar por fecha para encontrar la mas temprana y la mas tardia
+    final fechas = grupo.map((h) => h.fechaInicio).toList()..sort();
+    final fechaInicio = fechas.first;
+    final fechaFin = fechas.last;
+
+    // Tomar el primer horario como base y actualizar las fechas
+    final base = grupo.first;
+
+    return Horario(
+      codigoConjunto: base.codigoConjunto,
+      idMateria: base.idMateria,
+      nombreMateria: base.nombreMateria,
+      departamento: base.departamento,
+      nivel: base.nivel,
+      nrc: base.nrc,
+      grupo: base.grupo,
+      matriculados: base.matriculados,
+      cupos: base.cupos,
+      modalidad: base.modalidad,
+      nombreBloque: base.nombreBloque,
+      nombreSalon: base.nombreSalon,
+      piso: base.piso,
+      profesor: base.profesor,
+      dia: base.dia,
+      horaInicio: base.horaInicio,
+      horaFin: base.horaFin,
+      fechaInicio: fechaInicio,
+      fechaFin: fechaFin,
+      active: base.active,
+    );
   }
 
   /// Valida si un JSON tiene el formato correcto de horarios
