@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -86,7 +87,8 @@ class FileStorageService {
 
       if (pickedFile.bytes != null) {
         // Web o cuando el archivo se lee en memoria
-        content = String.fromCharCodes(pickedFile.bytes!);
+        // Usar utf8.decode para manejar correctamente caracteres especiales (ñ, acentos)
+        content = utf8.decode(pickedFile.bytes!);
         fileName = pickedFile.name;
       } else if (pickedFile.path != null) {
         // Mobile/Desktop con acceso al path

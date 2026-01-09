@@ -24,10 +24,7 @@ final appRouter = GoRouter(
   initialLocation: '/splash',
   routes: [
     // Splash screen
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashPage(),
-    ),
+    GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
     // Shell route para el bottom navigation
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
@@ -57,11 +54,13 @@ final appRouter = GoRouter(
     ),
 
     // Rutas de detalle (fuera del shell)
+    // Nota: GoRouter decodifica automaticamente los pathParameters,
+    // por lo que no necesitamos usar Uri.decodeComponent
     GoRoute(
       path: '/salon/:nombre',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final nombre = Uri.decodeComponent(state.pathParameters['nombre']!);
+        final nombre = state.pathParameters['nombre']!;
         return SalonDetailPage(salonNombre: nombre);
       },
     ),
@@ -69,7 +68,7 @@ final appRouter = GoRouter(
       path: '/profesor/:nombre',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final nombre = Uri.decodeComponent(state.pathParameters['nombre']!);
+        final nombre = state.pathParameters['nombre']!;
         return ProfesorDetailPage(profesorNombre: nombre);
       },
     ),
@@ -77,7 +76,7 @@ final appRouter = GoRouter(
       path: '/materia/:nombre',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final nombre = Uri.decodeComponent(state.pathParameters['nombre']!);
+        final nombre = state.pathParameters['nombre']!;
         return MateriaDetailPage(materiaNombre: nombre);
       },
     ),
@@ -93,7 +92,7 @@ final appRouter = GoRouter(
       path: '/conjunto/:codigo',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final codigo = Uri.decodeComponent(state.pathParameters['codigo']!);
+        final codigo = state.pathParameters['codigo']!;
         return ConjuntoPage(codigoConjunto: codigo);
       },
     ),
