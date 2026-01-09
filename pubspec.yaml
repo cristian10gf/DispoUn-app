@@ -36,6 +36,14 @@ dependencies:
   
   # Efectos de carga
   shimmer: ^3.0.0
+  
+  # Mi Horario - Captura y exportacion de imagen
+  screenshot: ^3.0.0
+  image_gallery_saver_plus: ^4.0.1
+  share_plus: ^10.1.4
+  
+  # Persistencia local para configuracion del usuario
+  shared_preferences: ^2.3.5
 
 dev_dependencies:
   flutter_test:
