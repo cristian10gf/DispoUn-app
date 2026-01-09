@@ -10,6 +10,7 @@ import '../presentation/pages/materias/materia_detail_page.dart';
 import '../presentation/pages/materias/nrc_detail_page.dart';
 import '../presentation/pages/materias/conjunto_page.dart';
 import '../presentation/pages/settings/settings_page.dart';
+import '../presentation/pages/splash/splash_page.dart';
 import '../presentation/widgets/custom_bottom_nav.dart';
 
 /// Clave global para el navegador
@@ -19,8 +20,13 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 /// Configuracion del router de la app
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/home',
+  initialLocation: '/splash',
   routes: [
+    // Splash screen
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashPage(),
+    ),
     // Shell route para el bottom navigation
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
