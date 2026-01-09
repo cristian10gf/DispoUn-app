@@ -130,4 +130,30 @@ class AppStrings {
   static const String detalleNrc = 'Detalle del NRC';
   static const String ingresarNrc = 'Ingrese el NRC';
   static const String nrcNoEncontrado = 'NRC no encontrado';
+
+  // Mi Horario
+  static const String miHorario = 'Mi Horario';
+  static const String agregarNrcs = 'Agregar NRCs';
+  static const String editarNrcs = 'Editar NRCs';
+  static const String sinNrcsConfigurados = 'No tienes NRCs configurados';
+  static const String sinNrcsDescripcion =
+      'Agrega los NRCs de las materias en las que estas inscrito para ver tu horario personalizado';
+  static const String nrcsAgregados = 'NRCs agregados';
+  static const String nrcAgregado = 'NRC agregado correctamente';
+  static const String nrcEliminado = 'NRC eliminado';
+  static const String nrcYaExiste = 'El NRC ya esta en tu lista';
+  static const String ingresarNrcs = 'Ingresa los NRCs separados por coma';
+  static const String tusMaterias = 'Tus materias';
+  static const String descargarHorario = 'Descargar horario';
+  static const String compartirHorario = 'Compartir horario';
+  static const String horarioGuardado = 'Horario guardado en galeria';
+  static const String errorGuardarHorario = 'Error al guardar el horario';
+  static const String miHorarioPrincipal = 'Mi Horario como pantalla principal';
+  static const String miHorarioPrincipalDescripcion =
+      'Al abrir la app, se mostrara Mi Horario en lugar de Disponibilidad';
+  static const String eliminarTodosNrcs = 'Eliminar todos los NRCs';
+  static const String confirmarEliminarNrcs =
+      'Se eliminaran todos los NRCs de tu horario';
+  static const String nrcsNoEncontrados = 'NRCs no encontrados';
+  static const String nrcsYaExistentes = 'NRCs que ya tenias';
 }
