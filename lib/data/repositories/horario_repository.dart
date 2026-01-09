@@ -26,6 +26,37 @@ class HorarioRepository {
     return HorarioRepository._(horarios, index);
   }
 
+  /// Combina multiples repositorios en uno solo
+  /// Los horarios duplicados se eliminan basandose en NRC + dia + hora
+  static HorarioRepository combine(List<HorarioRepository> repositories) {
+    if (repositories.isEmpty) {
+      return HorarioRepository._([], HorarioIndex.build([]));
+    }
+
+    if (repositories.length == 1) {
+      return repositories.first;
+    }
+
+    // Combinar todos los horarios eliminando duplicados
+    final Set<String> seen = {};
+    final List<Horario> combinedHorarios = [];
+
+    for (final repo in repositories) {
+      for (final horario in repo._horarios) {
+        // Crear clave unica basada en NRC, dia y hora
+        final key =
+            '${horario.nrc}_${horario.dia}_${horario.horaInicio}_${horario.horaFin}';
+        if (!seen.contains(key)) {
+          seen.add(key);
+          combinedHorarios.add(horario);
+        }
+      }
+    }
+
+    final index = HorarioIndex.build(combinedHorarios);
+    return HorarioRepository._(combinedHorarios, index);
+  }
+
   /// Obtiene todos los horarios
   List<Horario> get todos => _horarios;
 

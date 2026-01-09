@@ -10,29 +10,37 @@ class DataState {
   final HorarioRepository? repository;
   final bool isLoading;
   final String? error;
-  final String? activeFilePath;
+  /// Lista de rutas de archivos activos (puede ser uno o varios combinados)
+  final List<String> activeFilePaths;
   final List<FileInfo> availableFiles;
 
   const DataState({
     this.repository,
     this.isLoading = false,
     this.error,
-    this.activeFilePath,
+    this.activeFilePaths = const [],
     this.availableFiles = const [],
   });
+
+  /// Compatibilidad: obtiene el primer archivo activo o null
+  String? get activeFilePath =>
+      activeFilePaths.isNotEmpty ? activeFilePaths.first : null;
+
+  /// Indica si hay multiples archivos combinados
+  bool get isMultipleFiles => activeFilePaths.length > 1;
 
   DataState copyWith({
     HorarioRepository? repository,
     bool? isLoading,
     String? error,
-    String? activeFilePath,
+    List<String>? activeFilePaths,
     List<FileInfo>? availableFiles,
   }) {
     return DataState(
       repository: repository ?? this.repository,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      activeFilePath: activeFilePath ?? this.activeFilePath,
+      activeFilePaths: activeFilePaths ?? this.activeFilePaths,
       availableFiles: availableFiles ?? this.availableFiles,
     );
   }
@@ -84,7 +92,7 @@ class DataNotifier extends StateNotifier<DataState> {
         state = state.copyWith(
           repository: repository,
           isLoading: false,
-          activeFilePath: savedPath,
+          activeFilePaths: [savedPath],
           availableFiles: files,
         );
       }
@@ -96,7 +104,7 @@ class DataNotifier extends StateNotifier<DataState> {
     }
   }
 
-  /// Carga datos desde un archivo especifico
+  /// Carga datos desde un archivo especifico (reemplaza la seleccion actual)
   Future<void> loadFromFile(String filePath) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -107,7 +115,7 @@ class DataNotifier extends StateNotifier<DataState> {
       state = state.copyWith(
         repository: repository,
         isLoading: false,
-        activeFilePath: filePath,
+        activeFilePaths: [filePath],
         availableFiles: files,
       );
     } catch (e) {
@@ -116,6 +124,80 @@ class DataNotifier extends StateNotifier<DataState> {
         error: 'Error al cargar archivo: $e',
       );
     }
+  }
+
+  /// Carga datos desde multiples archivos (combina la informacion)
+  Future<void> loadFromMultipleFiles(List<String> filePaths) async {
+    if (filePaths.isEmpty) {
+      state = state.copyWith(
+        repository: null,
+        activeFilePaths: [],
+      );
+      return;
+    }
+
+    // Si solo hay un archivo, usar el metodo simple
+    if (filePaths.length == 1) {
+      await loadFromFile(filePaths.first);
+      return;
+    }
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Cargar todos los repositorios
+      final repositories = <HorarioRepository>[];
+      for (final path in filePaths) {
+        final repo = await HorarioRepository.fromJsonFile(path);
+        repositories.add(repo);
+      }
+
+      // Combinar todos los repositorios
+      final combinedRepository = HorarioRepository.combine(repositories);
+      final files = await FileStorageService.listJsonFiles();
+
+      state = state.copyWith(
+        repository: combinedRepository,
+        isLoading: false,
+        activeFilePaths: filePaths,
+        availableFiles: files,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error al combinar archivos: $e',
+      );
+    }
+  }
+
+  /// Agrega un archivo a la seleccion actual (combina datos)
+  Future<void> addFileToSelection(String filePath) async {
+    final currentPaths = List<String>.from(state.activeFilePaths);
+    if (currentPaths.contains(filePath)) return;
+
+    currentPaths.add(filePath);
+    await loadFromMultipleFiles(currentPaths);
+  }
+
+  /// Remueve un archivo de la seleccion actual
+  Future<void> removeFileFromSelection(String filePath) async {
+    final currentPaths = List<String>.from(state.activeFilePaths);
+    currentPaths.remove(filePath);
+    await loadFromMultipleFiles(currentPaths);
+  }
+
+  /// Alterna la seleccion de un archivo
+  Future<void> toggleFileSelection(String filePath) async {
+    if (state.activeFilePaths.contains(filePath)) {
+      await removeFileFromSelection(filePath);
+    } else {
+      await addFileToSelection(filePath);
+    }
+  }
+
+  /// Verifica si un archivo esta seleccionado
+  bool isFileSelected(String filePath) {
+    return state.activeFilePaths.contains(filePath);
   }
 
   /// Importa un nuevo archivo JSON
@@ -149,7 +231,7 @@ class DataNotifier extends StateNotifier<DataState> {
       state = state.copyWith(
         repository: repository,
         isLoading: false,
-        activeFilePath: result.filePath,
+        activeFilePaths: [result.filePath],
         availableFiles: files,
       );
 
@@ -169,18 +251,29 @@ class DataNotifier extends StateNotifier<DataState> {
 
     if (deleted) {
       final files = await FileStorageService.listJsonFiles();
+      final currentPaths = List<String>.from(state.activeFilePaths);
 
-      // Si se elimino el archivo activo, cargar otro
-      if (filePath == state.activeFilePath && files.isNotEmpty) {
+      // Remover el archivo de la seleccion si estaba seleccionado
+      currentPaths.remove(filePath);
+
+      if (currentPaths.isEmpty && files.isNotEmpty) {
+        // Si no quedan archivos seleccionados, cargar el primero disponible
         await loadFromFile(files.first.path);
       } else if (files.isEmpty) {
         state = state.copyWith(
           repository: null,
-          activeFilePath: null,
+          activeFilePaths: [],
           availableFiles: [],
         );
+      } else if (currentPaths.isEmpty) {
+        state = state.copyWith(
+          repository: null,
+          activeFilePaths: [],
+          availableFiles: files,
+        );
       } else {
-        state = state.copyWith(availableFiles: files);
+        // Recargar con los archivos restantes
+        await loadFromMultipleFiles(currentPaths);
       }
     }
 

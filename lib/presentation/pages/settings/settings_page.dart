@@ -8,11 +8,18 @@ import '../../../data/services/file_storage_service.dart';
 import '../../../domain/providers/data_provider.dart';
 
 /// Pagina de ajustes
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  bool _multiSelectMode = false;
+
+  @override
+  Widget build(BuildContext context) {
     final dataState = ref.watch(dataNotifierProvider);
 
     return Scaffold(
@@ -32,11 +39,12 @@ class SettingsPage extends ConsumerWidget {
             _buildSectionHeader(AppStrings.archivosJson),
             const SizedBox(height: 12),
 
-            // Archivo activo
-            if (dataState.activeFilePath != null)
-              _buildActiveFileCard(
-                dataState.activeFilePath!,
+            // Archivos activos (uno o varios combinados)
+            if (dataState.activeFilePaths.isNotEmpty)
+              _buildActiveFilesCard(
+                dataState.activeFilePaths,
                 dataState.repository?.total ?? 0,
+                dataState.isMultipleFiles,
               ),
 
             const SizedBox(height: 16),
@@ -65,8 +73,18 @@ class SettingsPage extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
+            // Toggle para modo seleccion multiple
+            if (dataState.availableFiles.length > 1) ...[
+              _buildMultiSelectToggle(),
+              const SizedBox(height: 16),
+            ],
+
             // Lista de archivos disponibles
-            _buildSectionHeader('Archivos disponibles'),
+            _buildSectionHeader(
+              _multiSelectMode
+                  ? AppStrings.seleccionarParaCombinar
+                  : 'Archivos disponibles',
+            ),
             const SizedBox(height: 12),
 
             if (dataState.availableFiles.isEmpty)
@@ -74,7 +92,7 @@ class SettingsPage extends ConsumerWidget {
             else
               _buildFilesList(
                 dataState.availableFiles,
-                dataState.activeFilePath,
+                dataState.activeFilePaths,
                 ref,
                 context,
               ),
@@ -91,6 +109,63 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildMultiSelectToggle() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+        border: _multiSelectMode
+            ? Border.all(color: AppColors.primaryRed.withValues(alpha: 0.5))
+            : null,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _multiSelectMode ? Icons.layers : Icons.layers_outlined,
+            color: _multiSelectMode
+                ? AppColors.primaryRed
+                : AppColors.textSecondary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.combinarArchivos,
+                  style: TextStyle(
+                    color: _multiSelectMode
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Une datos de multiples archivos',
+                  style: TextStyle(
+                    color: AppColors.textTertiary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _multiSelectMode,
+            onChanged: (value) {
+              setState(() {
+                _multiSelectMode = value;
+              });
+            },
+            activeColor: AppColors.primaryRed,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
@@ -102,8 +177,12 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildActiveFileCard(String filePath, int totalHorarios) {
-    final fileName = filePath.split('/').last;
+  Widget _buildActiveFilesCard(
+    List<String> filePaths,
+    int totalHorarios,
+    bool isMultiple,
+  ) {
+    final fileNames = filePaths.map((p) => p.split('/').last).toList();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -113,6 +192,7 @@ class SettingsPage extends ConsumerWidget {
         border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.3)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(12),
@@ -120,8 +200,8 @@ class SettingsPage extends ConsumerWidget {
               color: AppColors.primaryRed.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.check_circle,
+            child: Icon(
+              isMultiple ? Icons.layers : Icons.check_circle,
               color: AppColors.primaryRed,
               size: 24,
             ),
@@ -131,25 +211,65 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  AppStrings.archivoActivo,
-                  style: TextStyle(
+                Text(
+                  isMultiple
+                      ? AppStrings.archivosCombinados
+                      : AppStrings.archivoActivo,
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  fileName,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                if (isMultiple) ...[
+                  Text(
+                    '${filePaths.length} archivos',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  ...fileNames.map(
+                    (name) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.insert_drive_file_outlined,
+                            size: 14,
+                            color: AppColors.textTertiary,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ] else
+                  Text(
+                    fileNames.first,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 const SizedBox(height: 4),
                 Text(
-                  '$totalHorarios horarios cargados',
+                  isMultiple
+                      ? '$totalHorarios horarios (${AppStrings.datosCombinados})'
+                      : '$totalHorarios horarios cargados',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -194,7 +314,7 @@ class SettingsPage extends ConsumerWidget {
 
   Widget _buildFilesList(
     List<FileInfo> files,
-    String? activePath,
+    List<String> activePaths,
     WidgetRef ref,
     BuildContext context,
   ) {
@@ -204,21 +324,28 @@ class SettingsPage extends ConsumerWidget {
       itemCount: files.length,
       itemBuilder: (context, index) {
         final file = files[index];
-        final isActive = file.path == activePath;
+        final isSelected = activePaths.contains(file.path);
 
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
-          color: isActive ? AppColors.primaryRed.withValues(alpha: 0.1) : null,
+          color: isSelected ? AppColors.primaryRed.withValues(alpha: 0.1) : null,
           child: ListTile(
-            leading: Icon(
-              isActive ? Icons.check_circle : Icons.description_outlined,
-              color: isActive ? AppColors.primaryRed : AppColors.textSecondary,
-            ),
+            leading: _multiSelectMode
+                ? Checkbox(
+                    value: isSelected,
+                    onChanged: (value) => _toggleFileSelection(ref, file.path),
+                    activeColor: AppColors.primaryRed,
+                  )
+                : Icon(
+                    isSelected ? Icons.check_circle : Icons.description_outlined,
+                    color:
+                        isSelected ? AppColors.primaryRed : AppColors.textSecondary,
+                  ),
             title: Text(
               file.name,
               style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
             subtitle: Text(
@@ -228,28 +355,37 @@ class SettingsPage extends ConsumerWidget {
                 fontSize: 12,
               ),
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isActive)
-                  IconButton(
-                    icon: const Icon(Icons.play_circle_outline),
-                    color: AppColors.primaryRed,
-                    onPressed: () => _loadFile(ref, file.path, context),
-                    tooltip: 'Usar este archivo',
+            onTap: _multiSelectMode
+                ? () => _toggleFileSelection(ref, file.path)
+                : null,
+            trailing: _multiSelectMode
+                ? null
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isSelected)
+                        IconButton(
+                          icon: const Icon(Icons.play_circle_outline),
+                          color: AppColors.primaryRed,
+                          onPressed: () => _loadFile(ref, file.path, context),
+                          tooltip: 'Usar este archivo',
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        color: AppColors.error,
+                        onPressed: () => _confirmDelete(context, ref, file),
+                        tooltip: AppStrings.eliminarArchivo,
+                      ),
+                    ],
                   ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
-                  onPressed: () => _confirmDelete(context, ref, file),
-                  tooltip: AppStrings.eliminarArchivo,
-                ),
-              ],
-            ),
           ),
         );
       },
     );
+  }
+
+  Future<void> _toggleFileSelection(WidgetRef ref, String filePath) async {
+    await ref.read(dataNotifierProvider.notifier).toggleFileSelection(filePath);
   }
 
   Widget _buildAboutCard() {

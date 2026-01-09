@@ -102,6 +102,8 @@ class AppStrings {
   // Ajustes
   static const String archivosJson = 'Archivos JSON';
   static const String archivoActivo = 'Archivo activo';
+  static const String archivosActivos = 'Archivos activos';
+  static const String archivosCombinados = 'Archivos combinados';
   static const String cargarArchivo = 'Cargar archivo';
   static const String seleccionarArchivo = 'Seleccionar archivo JSON';
   static const String archivoInvalido = 'El archivo no tiene un formato valido';
@@ -109,6 +111,12 @@ class AppStrings {
   static const String eliminarArchivo = 'Eliminar archivo';
   static const String confirmarEliminar =
       'Esta seguro de eliminar este archivo?';
+  static const String seleccionMultiple = 'Seleccion multiple';
+  static const String combinarArchivos = 'Combinar archivos';
+  static const String seleccionarParaCombinar =
+      'Selecciona los archivos que deseas combinar';
+  static const String archivosCombinandose = 'Combinando archivos...';
+  static const String datosCombinados = 'datos combinados';
 
   // Horario
   static const String horario = 'Horario';
