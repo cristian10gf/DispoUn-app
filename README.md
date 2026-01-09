@@ -52,7 +52,7 @@ DispoUn permite a los estudiantes y docentes de Uninorte consultar de manera rap
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/dispoun-app.git
+git clone https://github.com/cristian10gf/dispoun-app.git
 cd dispoun-app
 ```
 
