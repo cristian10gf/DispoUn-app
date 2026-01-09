@@ -28,17 +28,19 @@ class AppStrings {
   static const String jueves = 'Jueves';
   static const String viernes = 'Viernes';
   static const String sabado = 'Sabado';
+  static const String domingo = 'Domingo';
 
   static const Map<String, String> diasCompletos = {
     'L': lunes,
     'M': martes,
-    'I': miercoles,
+    'X': miercoles, // X representa miercoles en los datos
     'J': jueves,
     'V': viernes,
     'S': sabado,
+    'D': domingo,
   };
 
-  static const List<String> diasOrden = ['L', 'M', 'I', 'J', 'V', 'S'];
+  static const List<String> diasOrden = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   // Filtros de disponibilidad
   static const String filtros = 'Filtros';

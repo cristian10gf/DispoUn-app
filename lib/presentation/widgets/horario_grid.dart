@@ -37,7 +37,7 @@ class HorarioGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth - timeColumnWidth;
-        final calculatedDayWidth = availableWidth / 6;
+        final calculatedDayWidth = availableWidth / 7; // 7 dias: L-D
         final minWidth = screenWidth < 400 ? 60.0 : 80.0;
         final maxWidth = isLandscape ? 180.0 : 150.0;
         final effectiveDayWidth = calculatedDayWidth.clamp(minWidth, maxWidth);
