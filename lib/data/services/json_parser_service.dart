@@ -22,12 +22,36 @@ class JsonParserService {
   /// Funcion que se ejecuta en el Isolate para parsear JSON string
   static List<Horario> _parseHorariosIsolate(String jsonString) {
     final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
-    return _parseList(jsonList);
+    final fixedList = _fixEncodingInList(jsonList);
+    return _parseList(fixedList);
   }
 
   /// Funcion que se ejecuta en el Isolate para parsear lista
   static List<Horario> _parseHorariosFromListIsolate(List<dynamic> jsonList) {
-    return _parseList(jsonList);
+    final fixedList = _fixEncodingInList(jsonList);
+    return _parseList(fixedList);
+  }
+
+  /// Corrige el encoding reemplazando "?" por "ñ" en todos los strings
+  static dynamic _fixEncoding(dynamic value) {
+    if (value is String) {
+      return value.replaceAll('?', 'ñ');
+    } else if (value is Map<String, dynamic>) {
+      return _fixEncodingInMap(value);
+    } else if (value is List) {
+      return _fixEncodingInList(value);
+    }
+    return value;
+  }
+
+  /// Corrige el encoding en un Map
+  static Map<String, dynamic> _fixEncodingInMap(Map<String, dynamic> map) {
+    return map.map((key, value) => MapEntry(key, _fixEncoding(value)));
+  }
+
+  /// Corrige el encoding en una List
+  static List<dynamic> _fixEncodingInList(List<dynamic> list) {
+    return list.map(_fixEncoding).toList();
   }
 
   /// Parsea una lista de JSON a objetos Horario
