@@ -15,7 +15,9 @@ class AvailabilityTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final salones = ref.watch(salonesDisponiblesProvider);
-    final filtroActual = ref.watch(availabilityFilterProvider).disponibilidadFiltro;
+    final filtroActual = ref
+        .watch(availabilityFilterProvider)
+        .disponibilidadFiltro;
 
     // Contar totales (sin filtro de disponibilidad)
     final todosLosSalones = ref.watch(salonesDisponiblesSinFiltroProvider);
@@ -35,11 +37,17 @@ class AvailabilityTable extends ConsumerWidget {
                 color: AppColors.success,
                 isSelected: filtroActual == DisponibilidadFiltro.disponibles,
                 onTap: () {
-                  final notifier = ref.read(availabilityFilterProvider.notifier);
+                  final notifier = ref.read(
+                    availabilityFilterProvider.notifier,
+                  );
                   if (filtroActual == DisponibilidadFiltro.disponibles) {
-                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.todos);
+                    notifier.setDisponibilidadFiltro(
+                      DisponibilidadFiltro.todos,
+                    );
                   } else {
-                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.disponibles);
+                    notifier.setDisponibilidadFiltro(
+                      DisponibilidadFiltro.disponibles,
+                    );
                   }
                 },
               ),
@@ -49,11 +57,17 @@ class AvailabilityTable extends ConsumerWidget {
                 color: AppColors.error,
                 isSelected: filtroActual == DisponibilidadFiltro.ocupados,
                 onTap: () {
-                  final notifier = ref.read(availabilityFilterProvider.notifier);
+                  final notifier = ref.read(
+                    availabilityFilterProvider.notifier,
+                  );
                   if (filtroActual == DisponibilidadFiltro.ocupados) {
-                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.todos);
+                    notifier.setDisponibilidadFiltro(
+                      DisponibilidadFiltro.todos,
+                    );
                   } else {
-                    notifier.setDisponibilidadFiltro(DisponibilidadFiltro.ocupados);
+                    notifier.setDisponibilidadFiltro(
+                      DisponibilidadFiltro.ocupados,
+                    );
                   }
                 },
               ),
@@ -69,26 +83,35 @@ class AvailabilityTable extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.search_off, size: 48, color: AppColors.textTertiary),
+                  Icon(
+                    Icons.search_off,
+                    size: 48,
+                    color: AppColors.textTertiary,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     AppStrings.noResults,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
             ),
           )
         else
-          ...salones.map((salon) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SalonTile(
-                  salon: salon,
-                  onTap: onSalonTap != null
-                      ? () => onSalonTap!(salon.nombreSalon)
-                      : null,
-                ),
-              )),
+          ...salones.map(
+            (salon) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _SalonTile(
+                salon: salon,
+                onTap: onSalonTap != null
+                    ? () => onSalonTap!(salon.nombreSalon)
+                    : null,
+              ),
+            ),
+          ),
         const SizedBox(height: 16),
       ],
     );
@@ -119,10 +142,7 @@ class _FilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? color : color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color,
-            width: isSelected ? 2 : 1,
-          ),
+          border: Border.all(color: color, width: isSelected ? 2 : 1),
         ),
         child: Text(
           label,
@@ -202,8 +222,8 @@ class _SalonTile extends StatelessWidget {
               ),
 
               // Estado y flecha
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -225,14 +245,12 @@ class _SalonTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (onTap != null) ...[
-                    const SizedBox(height: 4),
+                  if (onTap != null)
                     const Icon(
                       Icons.chevron_right,
                       color: AppColors.textTertiary,
                       size: 20,
                     ),
-                  ],
                 ],
               ),
             ],
@@ -242,4 +260,3 @@ class _SalonTile extends StatelessWidget {
     );
   }
 }
-
