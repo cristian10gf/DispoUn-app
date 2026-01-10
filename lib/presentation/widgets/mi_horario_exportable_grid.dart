@@ -29,24 +29,33 @@ class MiHorarioExportableGrid extends StatelessWidget {
     this.endHour = 20,
   });
 
-  /// Captura el widget como imagen
-  Future<Uint8List?> captureAsImage() async {
-    return await screenshotController.capture(
-      pixelRatio: 2.0,
+  /// Captura el widget completo como imagen (sin scroll, renderiza todo)
+  Future<Uint8List?> captureAsImage({double pixelRatio = 3.0}) async {
+    return await screenshotController.captureFromWidget(
+      _ExportableContent(
+        horarios: horarios,
+        nrcInfos: nrcInfos,
+        onHorarioTap: null, // Sin tap para exportación
+        startHour: startHour,
+        endHour: endHour,
+        isExporting: true, // Sin scroll para exportación
+      ),
+      pixelRatio: pixelRatio,
       delay: const Duration(milliseconds: 100),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Screenshot(
-      controller: screenshotController,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       child: _ExportableContent(
         horarios: horarios,
         nrcInfos: nrcInfos,
         onHorarioTap: onHorarioTap,
         startHour: startHour,
         endHour: endHour,
+        isExporting: false, // Con scroll para vista interactiva
       ),
     );
   }
@@ -59,6 +68,7 @@ class _ExportableContent extends StatelessWidget {
   final Function(Horario)? onHorarioTap;
   final int startHour;
   final int endHour;
+  final bool isExporting;
 
   // Dias a mostrar (sin domingo)
   static const List<String> _diasMostrar = ['L', 'M', 'X', 'J', 'V', 'S'];
@@ -69,6 +79,7 @@ class _ExportableContent extends StatelessWidget {
     this.onHorarioTap,
     this.startHour = 6,
     this.endHour = 20,
+    this.isExporting = false,
   });
 
   @override
@@ -93,19 +104,24 @@ class _ExportableContent extends StatelessWidget {
     const timeColumnWidth = 80.0;
     const dayColumnWidth = 110.0;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header con dias
-          _buildHeader(timeColumnWidth, dayColumnWidth),
-          // Filas de horario
-          for (int hour = startHour; hour < endHour; hour++)
-            _buildRow(hour, timeColumnWidth, dayColumnWidth, cellHeight),
-        ],
-      ),
+    // El contenido del grid
+    final gridContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header con dias
+        _buildHeader(timeColumnWidth, dayColumnWidth),
+        // Filas de horario
+        for (int hour = startHour; hour < endHour; hour++)
+          _buildRow(hour, timeColumnWidth, dayColumnWidth, cellHeight),
+      ],
     );
+
+    // Sin scroll para exportación, con scroll para vista interactiva
+    if (isExporting) {
+      return gridContent;
+    }
+
+    return gridContent;
   }
 
   Widget _buildHeader(double timeColumnWidth, double dayColumnWidth) {
