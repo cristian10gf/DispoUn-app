@@ -36,5 +36,5 @@ class Horario with _$Horario {
 
   /// Indica si la materia es virtual (salon NNS o dia Domingo)
   bool get esVirtual =>
-      nombreSalon.toUpperCase() == 'NNS' || dia.toUpperCase() == 'D';
+      nombreSalon.toUpperCase() == 'NNS' || dia.toUpperCase() == 'D' || nombreSalon.toUpperCase() == 'VIRT';
 }
