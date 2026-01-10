@@ -29,10 +29,32 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
   bool _isSaving = false;
 
   /// Construye el widget exportable completo para captura
+  /// Debe estar envuelto en Material y Directionality para renderizar correctamente
   Widget _buildExportableWidget(List<Horario> horarios, List<NrcInfo> nrcInfos) {
-    return _ExportableHorarioContent(
-      horarios: horarios,
-      nrcInfos: nrcInfos,
+    // Calcular el ancho total del grid: tiempo (80) + 6 días * 110 = 740
+    // Agregar padding (16) = 756
+    // La leyenda usa cards de 158px cada una, queremos que quepan 4 por fila
+    // 4 * 158 + 3 * 8 (spacing) = 656, menor que el grid, así que usamos el ancho del grid
+    const totalWidth = 756.0;
+
+    return MediaQuery(
+      data: const MediaQueryData(),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Material(
+          color: Colors.white,
+          child: UnconstrainedBox(
+            constrainedAxis: Axis.horizontal,
+            child: SizedBox(
+              width: totalWidth,
+              child: _ExportableHorarioContent(
+                horarios: horarios,
+                nrcInfos: nrcInfos,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -50,7 +72,10 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
       }
     }
 
-    return await _screenshotController.captureFromWidget(
+    // Usar captureFromLongWidget para capturar widgets largos completos
+    // Este método está diseñado específicamente para widgets que exceden la pantalla
+    // Importante: el widget debe usar Column (no ListView) y no usar Expanded/Flexible
+    return await _screenshotController.captureFromLongWidget(
       _buildExportableWidget(horarios, nrcInfos),
       pixelRatio: 3.0,
       delay: const Duration(milliseconds: 100),
