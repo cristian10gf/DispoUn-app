@@ -37,10 +37,10 @@ class _HomePageState extends ConsumerState<HomePage>
   void _checkInitialTab() {
     final miHorarioState = ref.read(miHorarioNotifierProvider);
     if (miHorarioState.esPantallaPrincipal && miHorarioState.tieneNrcs) {
-      _tabController.animateTo(0);
+      _tabController.animateTo(1);
     } else {
       // Default a Salones disponibles
-      _tabController.animateTo(1);
+      _tabController.animateTo(0);
     }
   }
 
@@ -73,12 +73,12 @@ class _HomePageState extends ConsumerState<HomePage>
           tabAlignment: TabAlignment.start,
           tabs: const [
             Tab(
-              icon: Icon(Icons.calendar_month_outlined),
-              text: AppStrings.miHorario,
-            ),
-            Tab(
               icon: Icon(Icons.room_outlined),
               text: AppStrings.salonesDisponibles,
+            ),
+            Tab(
+              icon: Icon(Icons.calendar_month_outlined),
+              text: AppStrings.miHorario,
             ),
             Tab(
               icon: Icon(Icons.bar_chart_outlined),
@@ -107,8 +107,8 @@ class _HomePageState extends ConsumerState<HomePage>
     return TabBarView(
       controller: _tabController,
       children: [
-        const MiHorarioSection(),
         _buildDisponibilidadTab(),
+        const MiHorarioSection(),
         const StatsSection(),
       ],
     );
