@@ -400,14 +400,43 @@ class NrcDetailPage extends ConsumerWidget {
             ),
             trailing: sesionVirtual
                 ? null
-                : const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textTertiary,
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Fechas de inicio y fin
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            _formatDateString(h.fechaInicio),
+                            style: const TextStyle(
+                              color: AppColors.textTertiary,
+                              fontSize: 10,
+                            ),
+                          ),
+                          if (h.fechaInicio != h.fechaFin)
+                            Text(
+                              _formatDateString(h.fechaFin),
+                              style: const TextStyle(
+                                color: AppColors.textTertiary,
+                                fontSize: 10,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textTertiary,
+                      ),
+                    ],
                   ),
             onTap: sesionVirtual
                 ? null
-                : () =>
-                    context.push('/salon/${Uri.encodeComponent(h.nombreSalon)}'),
+                : () => context.push(
+                    '/salon/${Uri.encodeComponent(h.nombreSalon)}',
+                  ),
           ),
         );
       },
@@ -429,5 +458,50 @@ class NrcDetailPage extends ConsumerWidget {
       ),
     );
   }
-}
 
+  /// Formatea una fecha desde String a formato corto (dd/MM)
+  String _formatDateString(String dateString) {
+    try {
+      // Intentar parsear diferentes formatos de fecha
+      DateTime? date;
+
+      // Formato ISO (YYYY-MM-DD)
+      if (dateString.contains('-')) {
+        final parts = dateString.split('-');
+        if (parts.length >= 3) {
+          date = DateTime.tryParse(dateString);
+          if (date == null) {
+            // Intentar formato YYYY-MM-DD
+            final year = int.tryParse(parts[0]);
+            final month = int.tryParse(parts[1]);
+            final day = int.tryParse(parts[2]);
+            if (year != null && month != null && day != null) {
+              date = DateTime(year, month, day);
+            }
+          }
+        }
+      } else if (dateString.contains('/')) {
+        // Formato DD/MM/YYYY o MM/DD/YYYY
+        final parts = dateString.split('/');
+        if (parts.length >= 3) {
+          final day = int.tryParse(parts[0]);
+          final month = int.tryParse(parts[1]);
+          final year = int.tryParse(parts[2]);
+          if (day != null && month != null && year != null) {
+            date = DateTime(year, month, day);
+          }
+        }
+      }
+
+      if (date != null) {
+        // Formato corto: solo día y mes (dd/MM)
+        return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      // Si falla el parseo, devolver la fecha original truncada
+    }
+
+    // Si no se puede parsear, devolver los primeros caracteres
+    return dateString.length > 10 ? dateString.substring(0, 10) : dateString;
+  }
+}
