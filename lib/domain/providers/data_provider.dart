@@ -59,9 +59,33 @@ class DataNotifier extends StateNotifier<DataState> {
       final files = await FileStorageService.listJsonFiles();
 
       if (files.isNotEmpty) {
-        // Cargar el archivo mas reciente
-        await loadFromFile(files.first.path);
-        state = state.copyWith(availableFiles: files);
+        // Intentar cargar la selección guardada de archivos activos
+        final savedActivePaths = await FileStorageService.loadActiveFilePaths();
+        
+        if (savedActivePaths.isNotEmpty) {
+          // Verificar que todos los archivos guardados aún existen
+          final validPaths = <String>[];
+          for (final path in savedActivePaths) {
+            final fileExists = files.any((f) => f.path == path);
+            if (fileExists) {
+              validPaths.add(path);
+            }
+          }
+
+          if (validPaths.isNotEmpty) {
+            // Cargar los archivos guardados (puede ser uno o varios)
+            await loadFromMultipleFiles(validPaths);
+            state = state.copyWith(availableFiles: files);
+          } else {
+            // Si los archivos guardados ya no existen, cargar el más reciente
+            await loadFromFile(files.first.path);
+            state = state.copyWith(availableFiles: files);
+          }
+        } else {
+          // No hay selección guardada, cargar el archivo mas reciente
+          await loadFromFile(files.first.path);
+          state = state.copyWith(availableFiles: files);
+        }
       } else {
         // Cargar desde assets si existe
         await _loadFromAssets();
@@ -89,10 +113,15 @@ class DataNotifier extends StateNotifier<DataState> {
         final repository = await HorarioRepository.fromJsonString(jsonString);
         final files = await FileStorageService.listJsonFiles();
 
+        final activePaths = [savedPath];
+        
+        // Guardar la selección
+        await FileStorageService.saveActiveFilePaths(activePaths);
+
         state = state.copyWith(
           repository: repository,
           isLoading: false,
-          activeFilePaths: [savedPath],
+          activeFilePaths: activePaths,
           availableFiles: files,
         );
       }
@@ -155,6 +184,9 @@ class DataNotifier extends StateNotifier<DataState> {
       // Combinar todos los repositorios
       final combinedRepository = HorarioRepository.combine(repositories);
       final files = await FileStorageService.listJsonFiles();
+
+      // Guardar la selección de archivos activos
+      await FileStorageService.saveActiveFilePaths(filePaths);
 
       state = state.copyWith(
         repository: combinedRepository,
@@ -260,12 +292,16 @@ class DataNotifier extends StateNotifier<DataState> {
         // Si no quedan archivos seleccionados, cargar el primero disponible
         await loadFromFile(files.first.path);
       } else if (files.isEmpty) {
+        // Limpiar la selección guardada
+        await FileStorageService.saveActiveFilePaths([]);
         state = state.copyWith(
           repository: null,
           activeFilePaths: [],
           availableFiles: [],
         );
       } else if (currentPaths.isEmpty) {
+        // Limpiar la selección guardada
+        await FileStorageService.saveActiveFilePaths([]);
         state = state.copyWith(
           repository: null,
           activeFilePaths: [],

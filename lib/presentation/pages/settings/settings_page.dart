@@ -18,6 +18,30 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _multiSelectMode = false;
+  bool _isLoadingMultiSelect = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMultiSelectMode();
+  }
+
+  Future<void> _loadMultiSelectMode() async {
+    final savedMode = await FileStorageService.loadMultiSelectMode();
+    if (mounted) {
+      setState(() {
+        _multiSelectMode = savedMode;
+        _isLoadingMultiSelect = false;
+      });
+    }
+  }
+
+  Future<void> _saveMultiSelectMode(bool value) async {
+    await FileStorageService.saveMultiSelectMode(value);
+    setState(() {
+      _multiSelectMode = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,22 +176,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 2),
                 Text(
                   'Une datos de multiples archivos',
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
                 ),
               ],
             ),
           ),
           Switch(
             value: _multiSelectMode,
-            onChanged: (value) {
-              setState(() {
-                _multiSelectMode = value;
-              });
-            },
-            activeColor: AppColors.primaryRed,
+            onChanged: _isLoadingMultiSelect
+                ? null
+                : (value) {
+                    _saveMultiSelectMode(value);
+                  },
+            activeTrackColor: AppColors.primaryRed.withValues(alpha: 0.5),
+            activeThumbColor: AppColors.primaryRed,
           ),
         ],
       ),
@@ -336,7 +358,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
-          color: isSelected ? AppColors.primaryRed.withValues(alpha: 0.1) : null,
+          color: isSelected
+              ? AppColors.primaryRed.withValues(alpha: 0.1)
+              : null,
           child: ListTile(
             leading: _multiSelectMode
                 ? Checkbox(
@@ -345,9 +369,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     activeColor: AppColors.primaryRed,
                   )
                 : Icon(
-                    isSelected ? Icons.check_circle : Icons.description_outlined,
-                    color:
-                        isSelected ? AppColors.primaryRed : AppColors.textSecondary,
+                    isSelected
+                        ? Icons.check_circle
+                        : Icons.description_outlined,
+                    color: isSelected
+                        ? AppColors.primaryRed
+                        : AppColors.textSecondary,
                   ),
             title: Text(
               file.name,
@@ -620,4 +647,3 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 }
-
