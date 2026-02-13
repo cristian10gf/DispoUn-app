@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Servicio para manejo de archivos JSON en almacenamiento local
 class FileStorageService {
@@ -152,6 +153,61 @@ class FileStorageService {
       return files.first.path;
     }
     return null;
+  }
+
+  /// Guarda la lista de archivos activos en SharedPreferences
+  static Future<bool> saveActiveFilePaths(List<String> filePaths) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return await prefs.setStringList('active_file_paths', filePaths);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Carga la lista de archivos activos desde SharedPreferences
+  static Future<List<String>> loadActiveFilePaths() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final paths = prefs.getStringList('active_file_paths');
+      
+      if (paths == null || paths.isEmpty) {
+        return [];
+      }
+
+      // Verificar que los archivos aún existen
+      final validPaths = <String>[];
+      for (final path in paths) {
+        final file = File(path);
+        if (await file.exists()) {
+          validPaths.add(path);
+        }
+      }
+
+      return validPaths;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Guarda el estado del modo de selección múltiple
+  static Future<bool> saveMultiSelectMode(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return await prefs.setBool('multi_select_mode', enabled);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Carga el estado del modo de selección múltiple
+  static Future<bool> loadMultiSelectMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('multi_select_mode') ?? false;
+    } catch (e) {
+      return false;
+    }
   }
 }
 

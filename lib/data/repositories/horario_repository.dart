@@ -27,7 +27,8 @@ class HorarioRepository {
   }
 
   /// Combina multiples repositorios en uno solo
-  /// Los horarios duplicados se eliminan basandose en NRC + dia + hora
+  /// Los horarios duplicados se eliminan basandose en una clave completa que incluye
+  /// todos los campos relevantes para identificar un horario unico
   static HorarioRepository combine(List<HorarioRepository> repositories) {
     if (repositories.isEmpty) {
       return HorarioRepository._([], HorarioIndex.build([]));
@@ -37,15 +38,16 @@ class HorarioRepository {
       return repositories.first;
     }
 
-    // Combinar todos los horarios eliminando duplicados
+    // Combinar todos los horarios eliminando solo duplicados exactos
+    // Usamos una clave mas completa para evitar eliminar horarios validos
     final Set<String> seen = {};
     final List<Horario> combinedHorarios = [];
 
     for (final repo in repositories) {
       for (final horario in repo._horarios) {
-        // Crear clave unica basada en NRC, dia y hora
-        final key =
-            '${horario.nrc}_${horario.dia}_${horario.horaInicio}_${horario.horaFin}';
+        // Crear clave unica basada en todos los campos relevantes
+        // Esto asegura que solo se eliminen duplicados exactos, no horarios validos
+        final key = _createUniqueKey(horario);
         if (!seen.contains(key)) {
           seen.add(key);
           combinedHorarios.add(horario);
@@ -55,6 +57,21 @@ class HorarioRepository {
 
     final index = HorarioIndex.build(combinedHorarios);
     return HorarioRepository._(combinedHorarios, index);
+  }
+
+  /// Crea una clave unica para un horario basada en todos sus campos relevantes
+  /// Esto asegura que solo horarios completamente identicos se consideren duplicados
+  static String _createUniqueKey(Horario horario) {
+    return '${horario.nrc}_'
+        '${horario.codigoConjunto}_'
+        '${horario.idMateria}_'
+        '${horario.dia}_'
+        '${horario.horaInicio}_'
+        '${horario.horaFin}_'
+        '${horario.nombreSalon}_'
+        '${horario.profesor}_'
+        '${horario.grupo}_'
+        '${horario.modalidad}';
   }
 
   /// Obtiene todos los horarios
@@ -306,4 +323,3 @@ class SalonDisponibilidad {
     this.ocupadoPor,
   });
 }
-

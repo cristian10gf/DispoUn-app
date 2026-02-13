@@ -6,6 +6,7 @@ import '../../../core/constants/colors.dart';
 import '../../../core/constants/strings.dart';
 import '../../../data/services/file_storage_service.dart';
 import '../../../domain/providers/data_provider.dart';
+import '../../../domain/providers/mi_horario_provider.dart';
 
 /// Pagina de ajustes
 class SettingsPage extends ConsumerStatefulWidget {
@@ -17,6 +18,30 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _multiSelectMode = false;
+  bool _isLoadingMultiSelect = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMultiSelectMode();
+  }
+
+  Future<void> _loadMultiSelectMode() async {
+    final savedMode = await FileStorageService.loadMultiSelectMode();
+    if (mounted) {
+      setState(() {
+        _multiSelectMode = savedMode;
+        _isLoadingMultiSelect = false;
+      });
+    }
+  }
+
+  Future<void> _saveMultiSelectMode(bool value) async {
+    await FileStorageService.saveMultiSelectMode(value);
+    setState(() {
+      _multiSelectMode = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +124,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
             const SizedBox(height: 32),
 
+            // Seccion de Mi Horario
+            _buildSectionHeader(AppStrings.miHorario),
+            const SizedBox(height: 12),
+            _buildMiHorarioSettings(),
+
+            const SizedBox(height: 32),
+
             // Informacion de la app
             _buildSectionHeader('Acerca de'),
             const SizedBox(height: 12),
@@ -144,22 +176,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 2),
                 Text(
                   'Une datos de multiples archivos',
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
                 ),
               ],
             ),
           ),
           Switch(
             value: _multiSelectMode,
-            onChanged: (value) {
-              setState(() {
-                _multiSelectMode = value;
-              });
-            },
-            activeColor: AppColors.primaryRed,
+            onChanged: _isLoadingMultiSelect
+                ? null
+                : (value) {
+                    _saveMultiSelectMode(value);
+                  },
+            activeTrackColor: AppColors.primaryRed.withValues(alpha: 0.5),
+            activeThumbColor: AppColors.primaryRed,
           ),
         ],
       ),
@@ -328,7 +358,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
-          color: isSelected ? AppColors.primaryRed.withValues(alpha: 0.1) : null,
+          color: isSelected
+              ? AppColors.primaryRed.withValues(alpha: 0.1)
+              : null,
           child: ListTile(
             leading: _multiSelectMode
                 ? Checkbox(
@@ -337,9 +369,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     activeColor: AppColors.primaryRed,
                   )
                 : Icon(
-                    isSelected ? Icons.check_circle : Icons.description_outlined,
-                    color:
-                        isSelected ? AppColors.primaryRed : AppColors.textSecondary,
+                    isSelected
+                        ? Icons.check_circle
+                        : Icons.description_outlined,
+                    color: isSelected
+                        ? AppColors.primaryRed
+                        : AppColors.textSecondary,
                   ),
             title: Text(
               file.name,
@@ -386,6 +421,113 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _toggleFileSelection(WidgetRef ref, String filePath) async {
     await ref.read(dataNotifierProvider.notifier).toggleFileSelection(filePath);
+  }
+
+  Widget _buildMiHorarioSettings() {
+    final miHorarioState = ref.watch(miHorarioNotifierProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // Opcion de pantalla principal
+          Row(
+            children: [
+              Icon(
+                miHorarioState.esPantallaPrincipal
+                    ? Icons.home
+                    : Icons.home_outlined,
+                color: miHorarioState.esPantallaPrincipal
+                    ? AppColors.primaryRed
+                    : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.miHorarioPrincipal,
+                      style: TextStyle(
+                        color: miHorarioState.esPantallaPrincipal
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      AppStrings.miHorarioPrincipalDescripcion,
+                      style: TextStyle(
+                        color: AppColors.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: miHorarioState.esPantallaPrincipal,
+                onChanged: miHorarioState.tieneNrcs
+                    ? (value) {
+                        ref
+                            .read(miHorarioNotifierProvider.notifier)
+                            .setPantallaPrincipal(value);
+                      }
+                    : null,
+                activeColor: AppColors.primaryRed,
+              ),
+            ],
+          ),
+
+          // Info de NRCs configurados
+          const Divider(height: 24, color: AppColors.divider),
+          Row(
+            children: [
+              const Icon(
+                Icons.format_list_numbered,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  miHorarioState.tieneNrcs
+                      ? '${miHorarioState.nrcs.length} NRC(s) configurados'
+                      : AppStrings.sinNrcsConfigurados,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (miHorarioState.tieneNrcs)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    miHorarioState.nrcs.join(', '),
+                    style: const TextStyle(
+                      color: AppColors.success,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAboutCard() {
@@ -505,4 +647,3 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 }
-

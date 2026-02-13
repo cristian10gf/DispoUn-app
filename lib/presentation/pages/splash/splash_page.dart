@@ -1,23 +1,32 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/colors.dart';
+import '../../../domain/providers/data_provider.dart';
 
 /// Página de splash con logo y loader animado
-class SplashPage extends StatefulWidget {
+/// El tiempo de visualización depende de cuánto tarden los datos en cargar
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+
+  bool _hasNavigated = false;
+  bool _minimumTimeElapsed = false;
+
+  /// Tiempo mínimo de visualización del splash (para que las animaciones se vean)
+  static const _minimumSplashDuration = Duration(milliseconds: 800);
 
   @override
   void initState() {
@@ -43,12 +52,30 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    // Navegar a home después de un delay
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    // Iniciar timer para tiempo mínimo de splash
+    Future.delayed(_minimumSplashDuration, () {
+      if (mounted) {
+        setState(() => _minimumTimeElapsed = true);
+        _tryNavigate();
+      }
+    });
+  }
+
+  /// Intenta navegar a home si los datos están listos y el tiempo mínimo ha pasado
+  void _tryNavigate() {
+    if (_hasNavigated) return;
+
+    final dataState = ref.read(dataNotifierProvider);
+
+    // Navegar solo si:
+    // 1. El tiempo mínimo ha pasado
+    // 2. Los datos terminaron de cargar (exitoso o con error)
+    if (_minimumTimeElapsed && !dataState.isLoading) {
+      _hasNavigated = true;
       if (mounted) {
         context.go('/home');
       }
-    });
+    }
   }
 
   @override
@@ -59,6 +86,22 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    // Observar el estado de carga de datos
+    final dataState = ref.watch(dataNotifierProvider);
+
+    // Intentar navegar cada vez que el estado cambie
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryNavigate();
+    });
+
+    // Determinar el texto de estado
+    String statusText = 'Cargando datos...';
+    if (dataState.error != null) {
+      statusText = 'Iniciando...';
+    } else if (!dataState.isLoading && dataState.repository != null) {
+      statusText = '¡Listo!';
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Center(
@@ -92,10 +135,7 @@ class _SplashPageState extends State<SplashPage>
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(
-                    'assets/logo.jpg',
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.asset('assets/logo.jpg', fit: BoxFit.cover),
                 ),
               ),
             ),
@@ -106,32 +146,30 @@ class _SplashPageState extends State<SplashPage>
             AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
-                return Opacity(
-                  opacity: _fadeAnimation.value,
-                  child: child,
-                );
+                return Opacity(opacity: _fadeAnimation.value, child: child);
               },
               child: const _CustomLoader(),
             ),
 
             const SizedBox(height: 24),
 
-            // Texto de carga
+            // Texto de carga dinámico
             AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
-                return Opacity(
-                  opacity: _fadeAnimation.value,
-                  child: child,
-                );
+                return Opacity(opacity: _fadeAnimation.value, child: child);
               },
-              child: const Text(
-                'Cargando...',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  statusText,
+                  key: ValueKey(statusText),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ),
@@ -224,12 +262,7 @@ class _LoaderPainter extends CustomPainter {
       ..shader = SweepGradient(
         startAngle: 0,
         endAngle: math.pi * 2,
-        colors: [
-          primaryColor,
-          secondaryColor,
-          accentColor,
-          primaryColor,
-        ],
+        colors: [primaryColor, secondaryColor, accentColor, primaryColor],
         transform: GradientRotation(progress * math.pi * 2),
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
