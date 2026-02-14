@@ -479,7 +479,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             .setPantallaPrincipal(value);
                       }
                     : null,
-                activeColor: AppColors.primaryRed,
+                activeThumbColor: AppColors.primaryRed,
               ),
             ],
           ),
