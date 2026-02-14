@@ -129,7 +129,7 @@ class AvailabilityFilters extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
-            value: filter.bloque,
+            initialValue: filter.bloque,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
@@ -178,7 +178,7 @@ class _TimeSelector extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           decoration: const InputDecoration(
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
