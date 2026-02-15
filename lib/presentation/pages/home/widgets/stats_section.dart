@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../domain/providers/stats_provider.dart';
 import '../../../widgets/stats_card.dart';
@@ -12,6 +12,7 @@ class StatsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final stats = ref.watch(generalStatsProvider);
 
     return SingleChildScrollView(
@@ -19,10 +20,10 @@ class StatsSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             AppStrings.estadisticas,
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -31,40 +32,47 @@ class StatsSection extends ConsumerWidget {
 
           // Stats principales
           StatsGrid(
-            crossAxisCount: 3,
-            stats: [
-              StatCard(
-                label: AppStrings.clases,
-                value: stats.totalClases.toString(),
-                icon: Icons.class_outlined,
-              ),
-              StatCard(
-                label: AppStrings.nrcs,
-                value: stats.totalNrcs.toString(),
-                icon: Icons.numbers,
-              ),
-              StatCard(
-                label: AppStrings.profesores,
-                value: stats.totalProfesores.toString(),
-                icon: Icons.person_outline,
-              ),
-              StatCard(
-                label: AppStrings.materias,
-                value: stats.totalMaterias.toString(),
-                icon: Icons.menu_book_outlined,
-              ),
-              StatCard(
-                label: 'Salones',
-                value: stats.totalSalones.toString(),
-                icon: Icons.room_outlined,
-              ),
-              StatCard(
-                label: 'Bloques',
-                value: stats.totalBloques.toString(),
-                icon: Icons.apartment_outlined,
-              ),
-            ],
-          ),
+                crossAxisCount: 3,
+                stats: [
+                  StatCard(
+                    label: AppStrings.clases,
+                    value: stats.totalClases.toString(),
+                    icon: Icons.class_outlined,
+                  ),
+                  StatCard(
+                    label: AppStrings.nrcs,
+                    value: stats.totalNrcs.toString(),
+                    icon: Icons.numbers,
+                  ),
+                  StatCard(
+                    label: AppStrings.profesores,
+                    value: stats.totalProfesores.toString(),
+                    icon: Icons.person_outline,
+                  ),
+                  StatCard(
+                    label: AppStrings.materias,
+                    value: stats.totalMaterias.toString(),
+                    icon: Icons.menu_book_outlined,
+                  ),
+                  StatCard(
+                    label: 'Salones',
+                    value: stats.totalSalones.toString(),
+                    icon: Icons.room_outlined,
+                  ),
+                  StatCard(
+                    label: 'Bloques',
+                    value: stats.totalBloques.toString(),
+                    icon: Icons.apartment_outlined,
+                  ),
+                ],
+              )
+              .animate()
+              .scale(
+                begin: const Offset(0.95, 0.95),
+                end: const Offset(1, 1),
+                duration: 300.ms,
+              )
+              .fadeIn(duration: 300.ms),
 
           const SizedBox(height: 24),
 
@@ -72,7 +80,7 @@ class StatsSection extends ConsumerWidget {
           StatsBarChart(
             title: AppStrings.porBloque,
             data: stats.clasesPorBloque,
-            barColor: AppColors.primaryRed,
+            barColor: colorScheme.primary,
           ),
 
           const SizedBox(height: 16),
@@ -81,7 +89,7 @@ class StatsSection extends ConsumerWidget {
           StatsBarChart(
             title: AppStrings.porDia,
             data: _formatDiasData(stats.clasesPorDia),
-            barColor: AppColors.accentCoral,
+            barColor: colorScheme.tertiary,
           ),
         ],
       ),
@@ -97,4 +105,3 @@ class StatsSection extends ConsumerWidget {
     return formatted;
   }
 }
-

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
@@ -13,6 +14,7 @@ import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../data/models/horario.dart';
 import '../../../../domain/providers/mi_horario_provider.dart';
+import '../../../../domain/providers/next_class_provider.dart';
 import '../../../widgets/horario_grid.dart';
 import 'nrc_input_dialog.dart';
 
@@ -30,7 +32,10 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
 
   /// Construye el widget exportable completo para captura
   /// Debe estar envuelto en Material y Directionality para renderizar correctamente
-  Widget _buildExportableWidget(List<Horario> horarios, List<NrcInfo> nrcInfos) {
+  Widget _buildExportableWidget(
+    List<Horario> horarios,
+    List<NrcInfo> nrcInfos,
+  ) {
     // Calcular el ancho total del grid: tiempo (80) + 6 días * 110 = 740
     // Agregar padding (16) = 756
     // La leyenda usa cards de 158px cada una, queremos que quepan 4 por fila
@@ -62,7 +67,7 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
   Future<Uint8List?> _captureFullHorario() async {
     final horarios = ref.read(miHorarioHorariosProvider);
     final miHorarioState = ref.read(miHorarioNotifierProvider);
-    
+
     // Obtener info de cada NRC
     final nrcInfos = <NrcInfo>[];
     for (final nrc in miHorarioState.nrcs) {
@@ -129,9 +134,8 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
       );
       await file.writeAsBytes(image);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Mi horario - DispoUn',
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], text: 'Mi horario - DispoUn'),
       );
     } catch (e) {
       _showMessage('Error al compartir: $e', isError: true);
@@ -145,7 +149,9 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppColors.error : AppColors.success,
+        backgroundColor: isError
+            ? Theme.of(context).colorScheme.error
+            : AppColors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -177,8 +183,8 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
               children: [
                 Text(
                   info.nombreMateria,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -211,16 +217,16 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
                 const SizedBox(height: 4),
                 Text(
                   info.codigoConjunto,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 10,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   info.profesor,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 10,
                   ),
                   maxLines: 2,
@@ -228,7 +234,10 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: _getCuposColor(info.cuposDisponibles),
                     borderRadius: BorderRadius.circular(6),
@@ -282,37 +291,56 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Banner de proxima clase
+              _buildNextClassBanner(context, ref),
+
               // Header con acciones
               _buildHeader(nrcInfos.length),
 
               // Grid de horario usando HorarioGrid
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: HorarioGrid(
-                  horarios: horarios,
-                  onHorarioTap: (horario) {
-                    context.push('/nrc/${horario.nrc}');
-                  },
-                ),
+                child:
+                    HorarioGrid(
+                          horarios: horarios,
+                          onHorarioTap: (horario) {
+                            context.push('/nrc/${horario.nrc}');
+                          },
+                        )
+                        .animate()
+                        .slideX(begin: 0.05, end: 0, duration: 300.ms)
+                        .fadeIn(duration: 300.ms),
               ),
 
               // Leyenda de materias
-              if (nrcInfos.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    '${AppStrings.materias} (${nrcInfos.length})',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+              if (nrcInfos.isNotEmpty)
+                Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            '${AppStrings.materias} (${nrcInfos.length})',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildMateriaLegend(nrcInfos),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(delay: 150.ms, duration: 300.ms)
+                    .slideY(
+                      begin: 0.03,
+                      end: 0,
+                      delay: 150.ms,
+                      duration: 300.ms,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildMateriaLegend(nrcInfos),
-              ],
             ],
           ),
         ),
@@ -323,7 +351,7 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
           bottom: 16,
           child: FloatingActionButton.extended(
             onPressed: _openNrcDialog,
-            backgroundColor: AppColors.primaryRed,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             icon: const Icon(Icons.edit_outlined),
             label: const Text(AppStrings.editarNrcs),
           ),
@@ -333,12 +361,99 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
         if (_isSaving)
           Container(
             color: Colors.black54,
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: const Center(child: CircularProgressIndicator()),
           ),
       ],
     );
+  }
+
+  Widget _buildNextClassBanner(BuildContext context, WidgetRef ref) {
+    final nextClass = ref.watch(nextClassProvider);
+    if (nextClass == null) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final isNow = nextClass.timeUntil == Duration.zero;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary.withValues(alpha: 0.15),
+            colorScheme.tertiary.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isNow ? Icons.school : Icons.schedule,
+              color: colorScheme.primary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isNow ? 'En clase ahora' : 'Proxima clase',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  nextClass.nombreMateria,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'Salon ${nextClass.horario.nombreSalon}'
+                  ' - ${nextClass.horaFormateada}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              nextClass.timeUntilFormatted,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0);
   }
 
   Widget _buildHeader(int cantidadMaterias) {
@@ -352,8 +467,8 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
               children: [
                 Text(
                   '$cantidadMaterias ${cantidadMaterias == 1 ? "materia" : "materias"}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 14,
                   ),
                 ),
@@ -364,14 +479,14 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
           IconButton(
             onPressed: _shareHorario,
             icon: const Icon(Icons.share_outlined),
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             tooltip: AppStrings.compartirHorario,
           ),
           // Boton descargar
           IconButton(
             onPressed: _saveToGallery,
             icon: const Icon(Icons.download_outlined),
-            color: AppColors.primaryRed,
+            color: Theme.of(context).colorScheme.primary,
             tooltip: AppStrings.descargarHorario,
           ),
         ],
@@ -389,23 +504,25 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
             Icon(
               Icons.calendar_month_outlined,
               size: 80,
-              color: AppColors.textTertiary.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               AppStrings.sinNrcsConfigurados,
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               AppStrings.sinNrcsDescripcion,
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -416,7 +533,7 @@ class _MiHorarioSectionState extends ConsumerState<MiHorarioSection> {
               icon: const Icon(Icons.add),
               label: const Text(AppStrings.agregarNrcs),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryRed,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -503,7 +620,9 @@ class _ExportableHorarioContent extends StatelessWidget {
               height: 24,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                border: Border(left: BorderSide(color: Colors.grey, width: 0.5)),
+                border: Border(
+                  left: BorderSide(color: Colors.grey, width: 0.5),
+                ),
               ),
               child: Text(
                 _getDiaCompleto(dia),
@@ -559,10 +678,7 @@ class _ExportableHorarioContent extends StatelessWidget {
           child: Center(
             child: Text(
               '$timeString - $nextHourString',
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 9,
-              ),
+              style: const TextStyle(color: Colors.black54, fontSize: 9),
               textAlign: TextAlign.center,
             ),
           ),
@@ -700,18 +816,12 @@ class _ExportableHorarioContent extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 info.codigoConjunto,
-                style: const TextStyle(
-                  color: Colors.black54,
-                  fontSize: 8,
-                ),
+                style: const TextStyle(color: Colors.black54, fontSize: 8),
               ),
               const SizedBox(height: 2),
               Text(
                 info.profesor,
-                style: const TextStyle(
-                  color: Colors.black54,
-                  fontSize: 8,
-                ),
+                style: const TextStyle(color: Colors.black54, fontSize: 8),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

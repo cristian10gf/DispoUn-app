@@ -54,7 +54,7 @@ class AvailabilityTable extends ConsumerWidget {
               const SizedBox(width: 12),
               _FilterChip(
                 label: '$totalOcupados ${AppStrings.salonOcupado}s',
-                color: AppColors.error,
+                color: Theme.of(context).colorScheme.error,
                 isSelected: filtroActual == DisponibilidadFiltro.ocupados,
                 onTap: () {
                   final notifier = ref.read(
@@ -77,8 +77,8 @@ class AvailabilityTable extends ConsumerWidget {
 
         // Lista de salones o mensaje vacio
         if (salones.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(32),
+          Padding(
+            padding: const EdgeInsets.all(32),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -86,13 +86,13 @@ class AvailabilityTable extends ConsumerWidget {
                   Icon(
                     Icons.search_off,
                     size: 48,
-                    color: AppColors.textTertiary,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     AppStrings.noResults,
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 16,
                     ),
                   ),
@@ -165,7 +165,8 @@ class _SalonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = salon.disponible ? AppColors.success : AppColors.error;
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = salon.disponible ? AppColors.success : colorScheme.error;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -191,8 +192,8 @@ class _SalonTile extends StatelessWidget {
                   children: [
                     Text(
                       salon.nombreSalon,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -200,8 +201,8 @@ class _SalonTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       salon.nombreBloque,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -209,8 +210,8 @@ class _SalonTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         salon.ocupadoPor!.nombreMateria,
-                        style: const TextStyle(
-                          color: AppColors.textTertiary,
+                        style: TextStyle(
+                          color: colorScheme.outline,
                           fontSize: 11,
                         ),
                         maxLines: 1,
@@ -246,9 +247,9 @@ class _SalonTile extends StatelessWidget {
                     ),
                   ),
                   if (onTap != null)
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
-                      color: AppColors.textTertiary,
+                      color: colorScheme.outline,
                       size: 20,
                     ),
                 ],

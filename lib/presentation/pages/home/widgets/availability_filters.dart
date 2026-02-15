@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/strings.dart';
 import '../../../../domain/providers/data_provider.dart';
 import '../../../../domain/providers/filter_provider.dart';
@@ -12,31 +11,28 @@ class AvailabilityFilters extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final filter = ref.watch(availabilityFilterProvider);
     final bloques = ref.watch(bloquesListProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.filter_list,
-                color: AppColors.primaryRed,
-                size: 20,
-              ),
+              Icon(Icons.filter_list, color: colorScheme.primary, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 AppStrings.filtros,
                 style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -53,9 +49,9 @@ class AvailabilityFilters extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // Dia de la semana
-          const Text(
+          Text(
             AppStrings.dia,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 8),
           SingleChildScrollView(
@@ -75,12 +71,12 @@ class AvailabilityFilters extends ConsumerWidget {
                             .setDia(dia);
                       }
                     },
-                    selectedColor: AppColors.primaryRed.withValues(alpha: 0.3),
-                    backgroundColor: AppColors.surfaceVariant,
+                    selectedColor: colorScheme.primary.withValues(alpha: 0.3),
+                    backgroundColor: colorScheme.surfaceContainerHighest,
                     labelStyle: TextStyle(
                       color: isSelected
-                          ? AppColors.primaryRed
-                          : AppColors.textSecondary,
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -123,9 +119,9 @@ class AvailabilityFilters extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // Bloque
-          const Text(
+          Text(
             AppStrings.bloque,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
@@ -167,6 +163,7 @@ class _TimeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final hours = List.generate(16, (i) => i + 6); // 6:00 a 21:00
 
     return Column(
@@ -174,7 +171,7 @@ class _TimeSelector extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(

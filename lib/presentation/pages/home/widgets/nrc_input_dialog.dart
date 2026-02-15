@@ -15,7 +15,7 @@ class NrcInputDialog extends ConsumerStatefulWidget {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceDark,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -79,6 +79,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
     });
 
     if (result.todosBien) {
+      HapticFeedback.mediumImpact();
       setState(() {
         _resultMessage = '${result.agregados.length} NRC(s) agregado(s)';
         _isError = false;
@@ -100,6 +101,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
         _isError = result.noEncontrados.isNotEmpty;
       });
       if (result.algunoAgregado) {
+        HapticFeedback.mediumImpact();
         _controller.clear();
       }
     }
@@ -110,26 +112,27 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
   }
 
   Future<void> _clearAllNrcs() async {
+    final colorScheme = Theme.of(context).colorScheme;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceDark,
-        title: const Text(
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: colorScheme.surface,
+        title: Text(
           AppStrings.eliminarTodosNrcs,
-          style: TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: colorScheme.onSurface),
         ),
-        content: const Text(
+        content: Text(
           AppStrings.confirmarEliminarNrcs,
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text(AppStrings.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: colorScheme.error),
             child: const Text('Eliminar'),
           ),
         ],
@@ -143,6 +146,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final miHorarioState = ref.watch(miHorarioNotifierProvider);
     final nrcs = miHorarioState.nrcs;
 
@@ -164,7 +168,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textTertiary,
+                  color: colorScheme.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -174,16 +178,16 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.edit_calendar_outlined,
-                      color: AppColors.primaryRed,
+                      color: colorScheme.primary,
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         AppStrings.editarNrcs,
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: colorScheme.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -192,7 +196,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                     if (nrcs.isNotEmpty)
                       IconButton(
                         icon: const Icon(Icons.delete_sweep_outlined),
-                        color: AppColors.error,
+                        color: colorScheme.error,
                         onPressed: _clearAllNrcs,
                         tooltip: AppStrings.eliminarTodosNrcs,
                       ),
@@ -200,7 +204,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                 ),
               ),
 
-              const Divider(color: AppColors.divider),
+              Divider(color: Theme.of(context).dividerColor),
 
               // Input de NRCs
               Padding(
@@ -213,9 +217,9 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                       focusNode: _focusNode,
                       decoration: InputDecoration(
                         hintText: AppStrings.ingresarNrcs,
-                        hintStyle: const TextStyle(color: AppColors.textTertiary),
+                        hintStyle: TextStyle(color: colorScheme.outline),
                         filled: true,
-                        fillColor: AppColors.surfaceVariant,
+                        fillColor: colorScheme.surfaceContainerHighest,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -233,11 +237,11 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                               )
                             : IconButton(
                                 icon: const Icon(Icons.add_circle_outline),
-                                color: AppColors.primaryRed,
+                                color: colorScheme.primary,
                                 onPressed: _addNrcs,
                               ),
                       ),
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: colorScheme.onSurface),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[\d,\s]')),
@@ -251,7 +255,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                           _resultMessage!,
                           style: TextStyle(
                             color: _isError
-                                ? AppColors.error
+                                ? colorScheme.error
                                 : AppColors.success,
                             fontSize: 12,
                           ),
@@ -287,7 +291,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryRed,
+                      backgroundColor: colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -312,6 +316,7 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
   }
 
   Widget _buildEmptyState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -319,23 +324,17 @@ class _NrcInputDialogState extends ConsumerState<NrcInputDialog> {
           Icon(
             Icons.playlist_add_outlined,
             size: 64,
-            color: AppColors.textTertiary.withValues(alpha: 0.5),
+            color: colorScheme.outline.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Aun no has agregado NRCs',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Ingresa los NRCs de tus materias arriba',
-            style: TextStyle(
-              color: AppColors.textTertiary,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: colorScheme.outline, fontSize: 12),
           ),
         ],
       ),
@@ -348,13 +347,11 @@ class _NrcListItem extends ConsumerWidget {
   final int nrc;
   final VoidCallback onRemove;
 
-  const _NrcListItem({
-    required this.nrc,
-    required this.onRemove,
-  });
+  const _NrcListItem({required this.nrc, required this.onRemove});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final info = ref.watch(nrcInfoProvider(nrc));
 
     if (info == null) {
@@ -362,24 +359,24 @@ class _NrcListItem extends ConsumerWidget {
         leading: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             'NRC $nrc',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        title: const Text(
+        title: Text(
           'NRC no encontrado',
-          style: TextStyle(color: AppColors.error),
+          style: TextStyle(color: colorScheme.error),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.remove_circle_outline),
-          color: AppColors.error,
+          color: colorScheme.error,
           onPressed: onRemove,
         ),
       );
@@ -390,11 +387,9 @@ class _NrcListItem extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: color, width: 4),
-        ),
+        border: Border(left: BorderSide(color: color, width: 4)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -415,8 +410,8 @@ class _NrcListItem extends ConsumerWidget {
         ),
         title: Text(
           info.nombreMateria,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w500,
             fontSize: 14,
           ),
@@ -425,16 +420,13 @@ class _NrcListItem extends ConsumerWidget {
         ),
         subtitle: Text(
           info.profesor,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: IconButton(
           icon: const Icon(Icons.remove_circle_outline),
-          color: AppColors.error,
+          color: colorScheme.error,
           onPressed: onRemove,
         ),
       ),
