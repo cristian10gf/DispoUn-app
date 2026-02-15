@@ -87,4 +87,3 @@ extension ResponsivePadding on BuildContext {
     return 2;
   }
 }
-

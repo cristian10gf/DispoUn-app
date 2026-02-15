@@ -24,6 +24,7 @@ class MateriaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final color = AppColors.getColorForString(horario.nombreMateria);
 
     return InkWell(
@@ -44,7 +45,7 @@ class MateriaCard extends StatelessWidget {
             Text(
               horario.nombreMateria,
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
                 fontSize: compact ? 12 : 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -58,7 +59,7 @@ class MateriaCard extends StatelessWidget {
               children: [
                 _buildChip('NRC ${horario.nrc}', color),
                 const SizedBox(width: 6),
-                _buildChip(horario.codigoConjunto, AppColors.textTertiary),
+                _buildChip(horario.codigoConjunto, colorScheme.outline),
               ],
             ),
 
@@ -66,17 +67,17 @@ class MateriaCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.person_outline,
                     size: 14,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       horario.profesor.normalizeProfesorName(),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -91,16 +92,16 @@ class MateriaCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.location_on_outlined,
                     size: 14,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${horario.nombreSalon} - ${horario.nombreBloque}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -219,7 +220,7 @@ class MateriaCardList extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: horarios.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, index) {
             final horario = horarios[index];
             return SizedBox(
@@ -239,7 +240,7 @@ class MateriaCardList extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: horarios.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final horario = horarios[index];
         return MateriaCard(
@@ -250,4 +251,3 @@ class MateriaCardList extends StatelessWidget {
     );
   }
 }
-

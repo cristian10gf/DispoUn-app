@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/colors.dart';
-
 /// Card para mostrar una estadistica individual
 class StatCard extends StatelessWidget {
   final String label;
@@ -21,12 +19,14 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -35,14 +35,14 @@ class StatCard extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 20, color: iconColor ?? AppColors.primaryRed),
+                Icon(icon, size: 20, color: iconColor ?? colorScheme.primary),
                 const SizedBox(width: 8),
               ],
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -55,8 +55,8 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -115,28 +115,32 @@ class StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: items.map((item) => _buildStatItem(item)).toList(),
+        children: items
+            .map((item) => _buildStatItem(item, colorScheme))
+            .toList(),
       ),
     );
   }
 
-  Widget _buildStatItem(StatItem item) {
+  Widget _buildStatItem(StatItem item, ColorScheme colorScheme) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           item.value,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -144,7 +148,7 @@ class StatsRow extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           item.label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
         ),
       ],
     );
@@ -163,19 +167,21 @@ class StatItem {
 class StatsBarChart extends StatelessWidget {
   final String title;
   final Map<String, int> data;
-  final Color barColor;
+  final Color? barColor;
   final int maxItems;
 
   const StatsBarChart({
     super.key,
     required this.title,
     required this.data,
-    this.barColor = AppColors.primaryRed,
+    this.barColor,
     this.maxItems = 6,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (data.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -188,30 +194,36 @@ class StatsBarChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
-          ...displayEntries.map((entry) => _buildBar(entry, maxValue)),
+          ...displayEntries.map((entry) => _buildBar(context, entry, maxValue)),
         ],
       ),
     );
   }
 
-  Widget _buildBar(MapEntry<String, int> entry, double maxValue) {
+  Widget _buildBar(
+    BuildContext context,
+    MapEntry<String, int> entry,
+    double maxValue,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
     final percentage = maxValue > 0 ? entry.value / maxValue : 0.0;
+    final effectiveBarColor = barColor ?? colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -224,8 +236,8 @@ class StatsBarChart extends StatelessWidget {
               Expanded(
                 child: Text(
                   entry.key,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                   maxLines: 1,
@@ -234,8 +246,8 @@ class StatsBarChart extends StatelessWidget {
               ),
               Text(
                 entry.value.toString(),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -247,8 +259,8 @@ class StatsBarChart extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percentage,
-              backgroundColor: AppColors.surfaceVariant,
-              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(effectiveBarColor),
               minHeight: 8,
             ),
           ),
@@ -257,4 +269,3 @@ class StatsBarChart extends StatelessWidget {
     );
   }
 }
-

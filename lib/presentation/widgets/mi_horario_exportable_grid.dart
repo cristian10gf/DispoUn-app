@@ -140,7 +140,9 @@ class _ExportableContent extends StatelessWidget {
               height: 24,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                border: Border(left: BorderSide(color: Colors.grey, width: 0.5)),
+                border: Border(
+                  left: BorderSide(color: Colors.grey, width: 0.5),
+                ),
               ),
               child: Text(
                 AppStrings.diasCompletos[dia]?.toUpperCase() ?? dia,
@@ -183,10 +185,7 @@ class _ExportableContent extends StatelessWidget {
           child: Center(
             child: Text(
               '$timeString - $nextHourString',
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 9,
-              ),
+              style: const TextStyle(color: Colors.black54, fontSize: 9),
               textAlign: TextAlign.center,
             ),
           ),
@@ -346,19 +345,13 @@ class _MateriaCard extends StatelessWidget {
           // Codigo
           Text(
             info.codigoConjunto,
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 8,
-            ),
+            style: const TextStyle(color: Colors.black54, fontSize: 8),
           ),
           const SizedBox(height: 2),
           // Profesor
           Text(
             info.profesor,
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 8,
-            ),
+            style: const TextStyle(color: Colors.black54, fontSize: 8),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

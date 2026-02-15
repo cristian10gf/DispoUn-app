@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/colors.dart';
 import '../../core/constants/strings.dart';
 
 /// Widget de input de busqueda reutilizable
@@ -63,11 +62,13 @@ class _SearchInputState extends State<SearchInput> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextField(
       controller: _controller,
       autofocus: widget.autofocus,
       onSubmitted: widget.onSubmitted,
-      style: const TextStyle(color: AppColors.textPrimary),
+      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: widget.hintText,
         prefixIcon: widget.prefixIcon ?? const Icon(Icons.search),
@@ -136,4 +137,3 @@ class _DebouncedSearchInputState extends State<DebouncedSearchInput> {
     );
   }
 }
-

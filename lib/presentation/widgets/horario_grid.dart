@@ -48,9 +48,14 @@ class HorarioGrid extends StatelessWidget {
             child: Column(
               children: [
                 // Header con dias
-                _buildHeader(effectiveDayWidth, timeColumnWidth),
+                _buildHeader(context, effectiveDayWidth, timeColumnWidth),
                 // Grid de horarios
-                _buildGrid(context, effectiveDayWidth, timeColumnWidth, cellHeight),
+                _buildGrid(
+                  context,
+                  effectiveDayWidth,
+                  timeColumnWidth,
+                  cellHeight,
+                ),
               ],
             ),
           ),
@@ -59,11 +64,17 @@ class HorarioGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(double dayWidth, double timeColumnWidth) {
+  Widget _buildHeader(
+    BuildContext context,
+    double dayWidth,
+    double timeColumnWidth,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceDark,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
       ),
       child: Row(
         children: [
@@ -75,13 +86,15 @@ class HorarioGrid extends StatelessWidget {
               width: dayWidth,
               height: 40,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                border: Border(left: BorderSide(color: AppColors.border)),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: colorScheme.outlineVariant),
+                ),
               ),
               child: Text(
                 AppStrings.diasCompletos[dia] ?? dia,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
@@ -115,6 +128,7 @@ class HorarioGrid extends StatelessWidget {
     double timeColumnWidth,
     double cellHeight,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     final timeString = '${hour.toString().padLeft(2, '0')}:00';
     final nextHourString = '${(hour + 1).toString().padLeft(2, '0')}:00';
 
@@ -126,18 +140,18 @@ class HorarioGrid extends StatelessWidget {
           width: timeColumnWidth,
           height: cellHeight,
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceDark,
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
             border: Border(
-              bottom: BorderSide(color: AppColors.border),
-              right: BorderSide(color: AppColors.border),
+              bottom: BorderSide(color: colorScheme.outlineVariant),
+              right: BorderSide(color: colorScheme.outlineVariant),
             ),
           ),
           child: Center(
             child: Text(
               '$timeString - $nextHourString',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 10,
               ),
               textAlign: TextAlign.center,
@@ -152,7 +166,15 @@ class HorarioGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildCell(BuildContext context, String dia, int hour, double dayWidth, double cellHeight) {
+  Widget _buildCell(
+    BuildContext context,
+    String dia,
+    int hour,
+    double dayWidth,
+    double cellHeight,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Buscar horarios que ocurran en este dia y hora
     final horariosEnCelda = horarios.where((h) {
       if (h.dia != dia) return false;
@@ -168,10 +190,10 @@ class HorarioGrid extends StatelessWidget {
     return Container(
       width: dayWidth,
       height: cellHeight,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          left: BorderSide(color: AppColors.border),
-          bottom: BorderSide(color: AppColors.border),
+          left: BorderSide(color: colorScheme.outlineVariant),
+          bottom: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
       child: horariosEnCelda.isEmpty
@@ -253,23 +275,32 @@ class HorarioGrid extends StatelessWidget {
         }),
         // Mostrar botón "+" si hay overflow
         if (hasOverflow)
-          GestureDetector(
-            onTap: () => _showHorariosModal(context, horariosEnCelda, dia, hour),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: AppColors.primaryRed.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Text(
-                '+${horariosEnCelda.length - _maxElementsInCell + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
+          Builder(
+            builder: (context) {
+              final colorScheme = Theme.of(context).colorScheme;
+              return GestureDetector(
+                onTap: () =>
+                    _showHorariosModal(context, horariosEnCelda, dia, hour),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: Text(
+                    '+${horariosEnCelda.length - _maxElementsInCell + 1}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
       ],
     );
@@ -287,7 +318,7 @@ class HorarioGrid extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surfaceDark,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -318,6 +349,9 @@ class _HorariosModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
       minChildSize: 0.3,
@@ -332,7 +366,7 @@ class _HorariosModal extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.textTertiary,
+                color: colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -351,13 +385,13 @@ class _HorariosModal extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryRed.withValues(alpha: 0.2),
+                          color: colorScheme.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           dia,
-                          style: const TextStyle(
-                            color: AppColors.primaryRed,
+                          style: TextStyle(
+                            color: colorScheme.primary,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -370,13 +404,13 @@ class _HorariosModal extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant,
+                          color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           hora,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
                             fontWeight: FontWeight.w500,
                             fontSize: 14,
                           ),
@@ -387,8 +421,8 @@ class _HorariosModal extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     '${horarios.length} materias encontradas',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 13,
                     ),
                   ),
@@ -396,7 +430,7 @@ class _HorariosModal extends StatelessWidget {
               ),
             ),
 
-            const Divider(color: AppColors.divider),
+            Divider(color: theme.dividerColor),
 
             // Lista de horarios
             Expanded(
@@ -407,7 +441,9 @@ class _HorariosModal extends StatelessWidget {
                 separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final horario = horarios[index];
-                  final color = AppColors.getColorForString(horario.nombreMateria);
+                  final color = AppColors.getColorForString(
+                    horario.nombreMateria,
+                  );
 
                   return Material(
                     color: Colors.transparent,
@@ -420,13 +456,10 @@ class _HorariosModal extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.cardBackground,
+                          color: colorScheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
-                            left: BorderSide(
-                              color: color,
-                              width: 4,
-                            ),
+                            left: BorderSide(color: color, width: 4),
                           ),
                         ),
                         child: Row(
@@ -438,8 +471,8 @@ class _HorariosModal extends StatelessWidget {
                                 children: [
                                   Text(
                                     horario.nombreMateria,
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
                                     ),
@@ -457,23 +490,23 @@ class _HorariosModal extends StatelessWidget {
                                       const SizedBox(width: 4),
                                       Text(
                                         horario.nombreSalon,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
+                                        style: TextStyle(
+                                          color: colorScheme.onSurfaceVariant,
                                           fontSize: 12,
                                         ),
                                       ),
                                       const SizedBox(width: 12),
-                                      const Icon(
+                                      Icon(
                                         Icons.person_outline,
                                         size: 14,
-                                        color: AppColors.textTertiary,
+                                        color: colorScheme.outline,
                                       ),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           horario.profesor,
-                                          style: const TextStyle(
-                                            color: AppColors.textSecondary,
+                                          style: TextStyle(
+                                            color: colorScheme.onSurfaceVariant,
                                             fontSize: 12,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -490,13 +523,16 @@ class _HorariosModal extends StatelessWidget {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.surfaceVariant,
-                                          borderRadius: BorderRadius.circular(4),
+                                          color: colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                         ),
                                         child: Text(
                                           'NRC: ${horario.nrc}',
-                                          style: const TextStyle(
-                                            color: AppColors.textTertiary,
+                                          style: TextStyle(
+                                            color: colorScheme.outline,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -505,8 +541,8 @@ class _HorariosModal extends StatelessWidget {
                                       const SizedBox(width: 8),
                                       Text(
                                         '${horario.horaInicio} - ${horario.horaFin}',
-                                        style: const TextStyle(
-                                          color: AppColors.textTertiary,
+                                        style: TextStyle(
+                                          color: colorScheme.outline,
                                           fontSize: 11,
                                         ),
                                       ),
@@ -516,9 +552,9 @@ class _HorariosModal extends StatelessWidget {
                               ),
                             ),
                             // Flecha
-                            const Icon(
+                            Icon(
                               Icons.chevron_right,
-                              color: AppColors.textTertiary,
+                              color: colorScheme.outline,
                             ),
                           ],
                         ),
@@ -564,8 +600,8 @@ class HorarioConMaterias extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               title!,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -586,8 +622,8 @@ class HorarioConMaterias extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Text(
             '${AppStrings.materias} (${horariosUnicos.length})',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),

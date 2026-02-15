@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import '../../core/constants/colors.dart';
 import '../../core/constants/strings.dart';
 
 /// Bottom Navigation Bar personalizado
@@ -16,10 +16,12 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceDark,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
       ),
       child: SafeArea(
         child: Padding(
@@ -33,6 +35,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: AppStrings.materias,
                 isSelected: currentIndex == 0,
                 onTap: () => onTap(0),
+                colorScheme: colorScheme,
               ),
               _NavItem(
                 icon: Icons.calendar_today_outlined,
@@ -40,6 +43,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: AppStrings.disponibilidad,
                 isSelected: currentIndex == 1,
                 onTap: () => onTap(1),
+                colorScheme: colorScheme,
               ),
               _NavItem(
                 icon: Icons.person_outline,
@@ -47,6 +51,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: AppStrings.profesores,
                 isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
+                colorScheme: colorScheme,
               ),
             ],
           ),
@@ -62,6 +67,7 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final ColorScheme colorScheme;
 
   const _NavItem({
     required this.icon,
@@ -69,19 +75,23 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
+    required this.colorScheme,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primaryRed.withValues(alpha: 0.15)
+              ? colorScheme.primary.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -91,8 +101,8 @@ class _NavItem extends StatelessWidget {
             Icon(
               isSelected ? activeIcon : icon,
               color: isSelected
-                  ? AppColors.primaryRed
-                  : AppColors.textSecondary,
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -100,8 +110,8 @@ class _NavItem extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected
-                    ? AppColors.primaryRed
-                    : AppColors.textSecondary,
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -112,4 +122,3 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-
