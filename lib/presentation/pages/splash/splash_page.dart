@@ -86,6 +86,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     // Observar el estado de carga de datos
     final dataState = ref.watch(dataNotifierProvider);
 
@@ -103,7 +104,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
     }
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -127,7 +128,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryRed.withValues(alpha: 0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 30,
                       spreadRadius: 5,
                     ),
@@ -164,8 +165,8 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 child: Text(
                   statusText,
                   key: ValueKey(statusText),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 1.2,
