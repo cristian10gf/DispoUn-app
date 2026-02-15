@@ -29,13 +29,13 @@ class SalonDetailPage extends ConsumerWidget {
         ),
       ),
       body: horarios.isEmpty
-          ? _buildNoData()
+          ? _buildNoData(context)
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Stats del salon
-                  if (stats != null) _buildStats(stats),
+                  if (stats != null) _buildStats(context, stats),
 
                   const Divider(),
 
@@ -44,8 +44,8 @@ class SalonDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       AppStrings.horarioSemanal,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -69,15 +69,15 @@ class SalonDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       '${AppStrings.materias} en este salon',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
 
-                  _buildMateriasList(horarios, context),
+                  _buildMateriasList(context, horarios),
 
                   const SizedBox(height: 32),
                 ],
@@ -86,7 +86,8 @@ class SalonDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStats(Map<String, dynamic> stats) {
+  Widget _buildStats(BuildContext context, Map<String, dynamic> stats) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -94,12 +95,12 @@ class SalonDetailPage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.location_on, color: AppColors.primaryRed),
+              Icon(Icons.location_on, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 stats['bloque'] ?? '',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
                   fontSize: 14,
                 ),
               ),
@@ -125,7 +126,7 @@ class SalonDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMateriasList(List horarios, BuildContext context) {
+  Widget _buildMateriasList(BuildContext context, List horarios) {
     // Agrupar por materia
     final materias = <String, int>{};
     for (final h in horarios) {
@@ -157,11 +158,11 @@ class SalonDetailPage extends ConsumerWidget {
           ),
           title: Text(
             entry.key,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           ),
-          trailing: const Icon(
+          trailing: Icon(
             Icons.chevron_right,
-            color: AppColors.textTertiary,
+            color: Theme.of(context).colorScheme.outline,
           ),
           onTap: () =>
               context.push('/materia/${Uri.encodeComponent(entry.key)}'),
@@ -170,20 +171,17 @@ class SalonDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNoData() {
-    return const Center(
+  Widget _buildNoData(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.event_busy_outlined,
-            size: 64,
-            color: AppColors.textTertiary,
-          ),
-          SizedBox(height: 16),
+          Icon(Icons.event_busy_outlined, size: 64, color: colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             AppStrings.sinHorario,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
         ],
       ),
