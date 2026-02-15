@@ -4,7 +4,7 @@ part 'materia_stats.freezed.dart';
 
 /// Estadisticas de una materia
 @freezed
-class MateriaStats with _$MateriaStats {
+abstract class MateriaStats with _$MateriaStats {
   const factory MateriaStats({
     required String nombre,
     required String codigoConjunto,

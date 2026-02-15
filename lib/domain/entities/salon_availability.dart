@@ -4,12 +4,12 @@ part 'salon_availability.freezed.dart';
 
 /// Disponibilidad de un salon
 @freezed
-class SalonAvailability with _$SalonAvailability {
+abstract class SalonAvailability with _$SalonAvailability {
   const factory SalonAvailability({
     required String nombreSalon,
     required String nombreBloque,
     required bool disponible,
-    String? ocupadoPor, // Nombre de la materia que lo ocupa
+    String? ocupadoPor,
     String? profesor,
     int? nrc,
   }) = _SalonAvailability;
@@ -17,7 +17,7 @@ class SalonAvailability with _$SalonAvailability {
 
 /// Filtros para consultar disponibilidad
 @freezed
-class AvailabilityFilter with _$AvailabilityFilter {
+abstract class AvailabilityFilter with _$AvailabilityFilter {
   const factory AvailabilityFilter({
     required String horaInicio,
     required String horaFin,
@@ -52,7 +52,7 @@ class AvailabilityFilter with _$AvailabilityFilter {
 
 /// Estadisticas generales
 @freezed
-class GeneralStats with _$GeneralStats {
+abstract class GeneralStats with _$GeneralStats {
   const factory GeneralStats({
     required int totalClases,
     required int totalNrcs,

@@ -4,7 +4,7 @@ part 'profesor_stats.freezed.dart';
 
 /// Estadisticas de un profesor
 @freezed
-class ProfesorStats with _$ProfesorStats {
+abstract class ProfesorStats with _$ProfesorStats {
   const factory ProfesorStats({
     required String nombre,
     required int clases,
