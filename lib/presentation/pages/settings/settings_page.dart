@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +8,8 @@ import '../../../core/constants/strings.dart';
 import '../../../data/services/file_storage_service.dart';
 import '../../../domain/providers/data_provider.dart';
 import '../../../domain/providers/mi_horario_provider.dart';
+import '../../../domain/providers/notification_provider.dart';
+import '../../../domain/providers/theme_provider.dart';
 
 /// Pagina de ajustes
 class SettingsPage extends ConsumerStatefulWidget {
@@ -60,104 +63,279 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Seccion de apariencia
+            Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(context, 'Apariencia'),
+                    const SizedBox(height: 12),
+                    _buildThemeSelector(context),
+                  ],
+                )
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.03, end: 0, duration: 300.ms),
+            const SizedBox(height: 32),
+
             // Seccion de archivos JSON
-            _buildSectionHeader(AppStrings.archivosJson),
-            const SizedBox(height: 12),
-
-            // Archivos activos (uno o varios combinados)
-            if (dataState.activeFilePaths.isNotEmpty)
-              _buildActiveFilesCard(
-                dataState.activeFilePaths,
-                dataState.repository?.total ?? 0,
-                dataState.isMultipleFiles,
-              ),
-
-            const SizedBox(height: 16),
-
-            // Boton para cargar archivo
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: dataState.isLoading
-                    ? null
-                    : () => _importFile(context, ref),
-                icon: dataState.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.upload_file),
-                label: Text(
-                  dataState.isLoading
-                      ? AppStrings.loading
-                      : AppStrings.cargarArchivo,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Toggle para modo seleccion multiple
-            if (dataState.availableFiles.length > 1) ...[
-              _buildMultiSelectToggle(),
-              const SizedBox(height: 16),
-            ],
-
-            // Lista de archivos disponibles
-            _buildSectionHeader(
-              _multiSelectMode
-                  ? AppStrings.seleccionarParaCombinar
-                  : 'Archivos disponibles',
-            ),
-            const SizedBox(height: 12),
-
-            if (dataState.availableFiles.isEmpty)
-              _buildEmptyFilesMessage()
-            else
-              _buildFilesList(
-                dataState.availableFiles,
-                dataState.activeFilePaths,
-                ref,
-                context,
-              ),
-
+            Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(context, AppStrings.archivosJson),
+                    const SizedBox(height: 12),
+                    if (dataState.activeFilePaths.isNotEmpty)
+                      _buildActiveFilesCard(
+                        context,
+                        dataState.activeFilePaths,
+                        dataState.repository?.total ?? 0,
+                        dataState.isMultipleFiles,
+                      ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: dataState.isLoading
+                            ? null
+                            : () => _importFile(context, ref),
+                        icon: dataState.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.upload_file),
+                        label: Text(
+                          dataState.isLoading
+                              ? AppStrings.loading
+                              : AppStrings.cargarArchivo,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (dataState.availableFiles.length > 1) ...[
+                      _buildMultiSelectToggle(context),
+                      const SizedBox(height: 16),
+                    ],
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: _buildSectionHeader(
+                        context,
+                        _multiSelectMode
+                            ? AppStrings.seleccionarParaCombinar
+                            : 'Archivos disponibles',
+                        key: ValueKey(_multiSelectMode),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: Alignment.topCenter,
+                      child: dataState.availableFiles.isEmpty
+                          ? _buildEmptyFilesMessage(context)
+                          : _buildFilesList(
+                              dataState.availableFiles,
+                              dataState.activeFilePaths,
+                              ref,
+                              context,
+                            ),
+                    ),
+                  ],
+                )
+                .animate()
+                .fadeIn(delay: 100.ms, duration: 300.ms)
+                .slideY(begin: 0.03, end: 0, delay: 100.ms, duration: 300.ms),
             const SizedBox(height: 32),
 
             // Seccion de Mi Horario
-            _buildSectionHeader(AppStrings.miHorario),
-            const SizedBox(height: 12),
-            _buildMiHorarioSettings(),
-
+            Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(context, AppStrings.miHorario),
+                    const SizedBox(height: 12),
+                    _buildMiHorarioSettings(context),
+                  ],
+                )
+                .animate()
+                .fadeIn(delay: 200.ms, duration: 300.ms)
+                .slideY(begin: 0.03, end: 0, delay: 200.ms, duration: 300.ms),
             const SizedBox(height: 32),
 
+            // Seccion de notificaciones (solo si tiene NRCs)
+            if (ref.watch(miHorarioNotifierProvider).tieneNrcs)
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context, 'Notificaciones'),
+                      const SizedBox(height: 12),
+                      _buildNotificationSettings(context),
+                      const SizedBox(height: 32),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: 400.ms)
+                  .slideY(begin: 0.03, end: 0),
+
             // Informacion de la app
-            _buildSectionHeader('Acerca de'),
-            const SizedBox(height: 12),
-            _buildAboutCard(),
+            Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(context, 'Acerca de'),
+                    const SizedBox(height: 12),
+                    _buildAboutCard(context),
+                  ],
+                )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 300.ms)
+                .slideY(begin: 0.03, end: 0, delay: 300.ms, duration: 300.ms),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMultiSelectToggle() {
+  Widget _buildThemeSelector(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentMode = ref.watch(themeNotifierProvider);
+
     return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.palette_outlined, color: colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Modo de tema',
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _buildThemeOption(
+                context,
+                icon: Icons.light_mode_outlined,
+                label: 'Claro',
+                mode: AppThemeMode.light,
+                isSelected: currentMode == AppThemeMode.light,
+              ),
+              const SizedBox(width: 8),
+              _buildThemeOption(
+                context,
+                icon: Icons.dark_mode_outlined,
+                label: 'Oscuro',
+                mode: AppThemeMode.dark,
+                isSelected: currentMode == AppThemeMode.dark,
+              ),
+              const SizedBox(width: 8),
+              _buildThemeOption(
+                context,
+                icon: Icons.settings_suggest_outlined,
+                label: 'Sistema',
+                mode: AppThemeMode.system,
+                isSelected: currentMode == AppThemeMode.system,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required AppThemeMode mode,
+    required bool isSelected,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          ref.read(themeNotifierProvider.notifier).setThemeMode(mode);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.15)
+                : colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected
+                ? Border.all(color: colorScheme.primary, width: 2)
+                : Border.all(color: Colors.transparent, width: 2),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                size: 24,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMultiSelectToggle(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: _multiSelectMode
+            ? colorScheme.primary.withValues(alpha: 0.08)
+            : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
-        border: _multiSelectMode
-            ? Border.all(color: AppColors.primaryRed.withValues(alpha: 0.5))
-            : null,
+        border: Border.all(
+          color: _multiSelectMode
+              ? colorScheme.primary.withValues(alpha: 0.5)
+              : Colors.transparent,
+          width: 1.5,
+        ),
       ),
       child: Row(
         children: [
           Icon(
             _multiSelectMode ? Icons.layers : Icons.layers_outlined,
             color: _multiSelectMode
-                ? AppColors.primaryRed
-                : AppColors.textSecondary,
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -168,15 +346,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   AppStrings.combinarArchivos,
                   style: TextStyle(
                     color: _multiSelectMode
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
+                        ? colorScheme.onSurface
+                        : colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Une datos de multiples archivos',
-                  style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                  style: TextStyle(color: colorScheme.outline, fontSize: 12),
                 ),
               ],
             ),
@@ -188,19 +366,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 : (value) {
                     _saveMultiSelectMode(value);
                   },
-            activeTrackColor: AppColors.primaryRed.withValues(alpha: 0.5),
-            activeThumbColor: AppColors.primaryRed,
+            activeTrackColor: colorScheme.primary.withValues(alpha: 0.5),
+            activeThumbColor: colorScheme.primary,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title, {Key? key}) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Text(
       title,
-      style: const TextStyle(
-        color: AppColors.textPrimary,
+      key: key,
+      style: TextStyle(
+        color: colorScheme.onSurface,
         fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
@@ -208,18 +389,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildActiveFilesCard(
+    BuildContext context,
     List<String> filePaths,
     int totalHorarios,
     bool isMultiple,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     final fileNames = filePaths.map((p) => p.split('/').last).toList();
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryRed.withValues(alpha: 0.1),
+        color: colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryRed.withValues(alpha: 0.3)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,12 +410,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primaryRed.withValues(alpha: 0.2),
+              color: colorScheme.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               isMultiple ? Icons.layers : Icons.check_circle,
-              color: AppColors.primaryRed,
+              color: colorScheme.primary,
               size: 24,
             ),
           ),
@@ -245,8 +428,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   isMultiple
                       ? AppStrings.archivosCombinados
                       : AppStrings.archivoActivo,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -254,8 +437,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 if (isMultiple) ...[
                   Text(
                     '${filePaths.length} archivos',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -266,17 +449,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       padding: const EdgeInsets.only(bottom: 2),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.insert_drive_file_outlined,
                             size: 14,
-                            color: AppColors.textTertiary,
+                            color: colorScheme.outline,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               name,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
                                 fontSize: 12,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -289,8 +472,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ] else
                   Text(
                     fileNames.first,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -300,8 +483,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   isMultiple
                       ? '$totalHorarios horarios (${AppStrings.datosCombinados})'
                       : '$totalHorarios horarios cargados',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -313,29 +496,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  Widget _buildEmptyFilesMessage() {
+  Widget _buildEmptyFilesMessage(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Column(
+      child: Column(
         children: [
           Icon(
             Icons.folder_open_outlined,
             size: 48,
-            color: AppColors.textTertiary,
+            color: colorScheme.outline,
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             'No hay archivos cargados',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Carga un archivo JSON para comenzar',
-            style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+            style: TextStyle(color: colorScheme.outline, fontSize: 12),
           ),
         ],
       ),
@@ -356,37 +541,37 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         final file = files[index];
         final isSelected = activePaths.contains(file.path);
 
+        final colorScheme = Theme.of(context).colorScheme;
+
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
-          color: isSelected
-              ? AppColors.primaryRed.withValues(alpha: 0.1)
-              : null,
+          color: isSelected ? colorScheme.primary.withValues(alpha: 0.1) : null,
           child: ListTile(
             leading: _multiSelectMode
                 ? Checkbox(
                     value: isSelected,
                     onChanged: (value) => _toggleFileSelection(ref, file.path),
-                    activeColor: AppColors.primaryRed,
+                    activeColor: colorScheme.primary,
                   )
                 : Icon(
                     isSelected
                         ? Icons.check_circle
                         : Icons.description_outlined,
                     color: isSelected
-                        ? AppColors.primaryRed
-                        : AppColors.textSecondary,
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
                   ),
             title: Text(
               file.name,
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
             subtitle: Text(
               '${file.sizeFormatted} | ${_formatDate(file.modified)}',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),
@@ -401,13 +586,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       if (!isSelected)
                         IconButton(
                           icon: const Icon(Icons.play_circle_outline),
-                          color: AppColors.primaryRed,
+                          color: colorScheme.primary,
                           onPressed: () => _loadFile(ref, file.path, context),
                           tooltip: 'Usar este archivo',
                         ),
                       IconButton(
                         icon: const Icon(Icons.delete_outline),
-                        color: AppColors.error,
+                        color: colorScheme.error,
                         onPressed: () => _confirmDelete(context, ref, file),
                         tooltip: AppStrings.eliminarArchivo,
                       ),
@@ -423,13 +608,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     await ref.read(dataNotifierProvider.notifier).toggleFileSelection(filePath);
   }
 
-  Widget _buildMiHorarioSettings() {
+  Widget _buildMiHorarioSettings(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     final miHorarioState = ref.watch(miHorarioNotifierProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -442,8 +629,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ? Icons.home
                     : Icons.home_outlined,
                 color: miHorarioState.esPantallaPrincipal
-                    ? AppColors.primaryRed
-                    : AppColors.textSecondary,
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -454,16 +641,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       AppStrings.miHorarioPrincipal,
                       style: TextStyle(
                         color: miHorarioState.esPantallaPrincipal
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+                            ? colorScheme.onSurface
+                            : colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
+                    Text(
                       AppStrings.miHorarioPrincipalDescripcion,
                       style: TextStyle(
-                        color: AppColors.textTertiary,
+                        color: colorScheme.outline,
                         fontSize: 12,
                       ),
                     ),
@@ -479,18 +666,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             .setPantallaPrincipal(value);
                       }
                     : null,
-                activeThumbColor: AppColors.primaryRed,
+                activeThumbColor: colorScheme.primary,
               ),
             ],
           ),
 
           // Info de NRCs configurados
-          const Divider(height: 24, color: AppColors.divider),
+          Divider(height: 24, color: theme.dividerColor),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.format_list_numbered,
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -498,8 +685,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   miHorarioState.tieneNrcs
                       ? '${miHorarioState.nrcs.length} NRC(s) configurados'
                       : AppStrings.sinNrcsConfigurados,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 14,
                   ),
                 ),
@@ -530,7 +717,126 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  Widget _buildAboutCard() {
+  Widget _buildNotificationSettings(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final notifSettings = ref.watch(notificationSettingsProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // Toggle de notificaciones
+          Row(
+            children: [
+              Icon(
+                notifSettings.enabled
+                    ? Icons.notifications_active
+                    : Icons.notifications_outlined,
+                color: notifSettings.enabled
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recordatorios de clase',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Recibe un aviso antes de cada clase',
+                      style: TextStyle(
+                        color: colorScheme.outline,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: notifSettings.enabled,
+                onChanged: (value) {
+                  ref
+                      .read(notificationSettingsProvider.notifier)
+                      .setEnabled(value);
+                },
+              ),
+            ],
+          ),
+
+          // Selector de tiempo de anticipacion
+          if (notifSettings.enabled) ...[
+            const SizedBox(height: 16),
+            Divider(color: colorScheme.outlineVariant),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Avisar con anticipacion:',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: notificationMinuteOptions.map((minutes) {
+                final isSelected = notifSettings.minutesBefore == minutes;
+                final label = minutes >= 60
+                    ? '${minutes ~/ 60} hora'
+                    : '$minutes min';
+
+                return ChoiceChip(
+                  label: Text(label),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) {
+                      ref
+                          .read(notificationSettingsProvider.notifier)
+                          .setMinutesBefore(minutes);
+                    }
+                  },
+                  selectedColor: colorScheme.primary.withValues(alpha: 0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -542,23 +848,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryRed.withValues(alpha: 0.2),
+                    color: colorScheme.primary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.calendar_today,
-                    color: AppColors.primaryRed,
+                    color: colorScheme.primary,
                     size: 32,
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       AppStrings.appName,
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -566,7 +872,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     Text(
                       'Version 1.0.0',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 14,
                       ),
                     ),
@@ -575,9 +881,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Aplicacion para consultar disponibilidad de salones, horarios de profesores y materias de Uninorte.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -593,12 +902,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final success = await ref.read(dataNotifierProvider.notifier).importFile();
 
     if (context.mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             success ? AppStrings.archivoCargado : AppStrings.archivoInvalido,
           ),
-          backgroundColor: success ? AppColors.success : AppColors.error,
+          backgroundColor: success ? AppColors.success : colorScheme.error,
         ),
       );
     }
@@ -639,7 +949,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   .read(dataNotifierProvider.notifier)
                   .deleteFile(file.path);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Eliminar'),
           ),
         ],
