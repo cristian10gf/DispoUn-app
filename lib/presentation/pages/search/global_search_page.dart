@@ -23,8 +23,20 @@ class SearchResult {
   });
 }
 
+/// Notifier para la query de busqueda global
+class _GlobalSearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  /// Establece un nuevo valor
+  void set(String value) => state = value;
+}
+
 /// Provider para la query de busqueda global
-final globalSearchQueryProvider = StateProvider<String>((ref) => '');
+final globalSearchQueryProvider =
+    NotifierProvider<_GlobalSearchQueryNotifier, String>(
+      _GlobalSearchQueryNotifier.new,
+    );
 
 /// Provider para los resultados de busqueda global
 final globalSearchResultsProvider = Provider<List<SearchResult>>((ref) {
@@ -41,10 +53,9 @@ final globalSearchResultsProvider = Provider<List<SearchResult>>((ref) {
   // Buscar materias
   for (final materia in repo.materias) {
     if (materia.toLowerCase().contains(query)) {
-      results.add(SearchResult(
-        nombre: materia,
-        tipo: SearchResultType.materia,
-      ));
+      results.add(
+        SearchResult(nombre: materia, tipo: SearchResultType.materia),
+      );
     }
   }
 
@@ -52,21 +63,22 @@ final globalSearchResultsProvider = Provider<List<SearchResult>>((ref) {
   for (final salon in repo.salones) {
     if (salon.toLowerCase().contains(query)) {
       final bloque = repo.getBloqueForSalon(salon);
-      results.add(SearchResult(
-        nombre: salon,
-        tipo: SearchResultType.salon,
-        subtitulo: bloque.isNotEmpty ? bloque : null,
-      ));
+      results.add(
+        SearchResult(
+          nombre: salon,
+          tipo: SearchResultType.salon,
+          subtitulo: bloque.isNotEmpty ? bloque : null,
+        ),
+      );
     }
   }
 
   // Buscar profesores
   for (final profesor in repo.profesores) {
     if (profesor.toLowerCase().contains(query)) {
-      results.add(SearchResult(
-        nombre: profesor,
-        tipo: SearchResultType.profesor,
-      ));
+      results.add(
+        SearchResult(nombre: profesor, tipo: SearchResultType.profesor),
+      );
     }
   }
 
@@ -104,6 +116,7 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final results = ref.watch(globalSearchResultsProvider);
     final query = ref.watch(globalSearchQueryProvider);
 
@@ -114,13 +127,13 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
           focusNode: _focusNode,
           decoration: InputDecoration(
             hintText: AppStrings.buscarTodo,
-            hintStyle: const TextStyle(color: AppColors.textTertiary),
+            hintStyle: TextStyle(color: colorScheme.outline),
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
           ),
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+          style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
           onChanged: (value) {
-            ref.read(globalSearchQueryProvider.notifier).state = value;
+            ref.read(globalSearchQueryProvider.notifier).set(value);
           },
         ),
         actions: [
@@ -129,20 +142,20 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
               icon: const Icon(Icons.clear),
               onPressed: () {
                 _searchController.clear();
-                ref.read(globalSearchQueryProvider.notifier).state = '';
+                ref.read(globalSearchQueryProvider.notifier).set('');
               },
             ),
         ],
       ),
       body: query.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(colorScheme)
           : results.isEmpty
-              ? _buildNoResults()
-              : _buildResults(results),
+          ? _buildNoResults(colorScheme)
+          : _buildResults(results, colorScheme),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(ColorScheme colorScheme) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -150,15 +163,12 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
           Icon(
             Icons.search,
             size: 80,
-            color: AppColors.textTertiary.withValues(alpha: 0.5),
+            color: colorScheme.outline.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             AppStrings.buscarTodo,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -166,30 +176,33 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
     );
   }
 
-  Widget _buildNoResults() {
-    return const Center(
+  Widget _buildNoResults(ColorScheme colorScheme) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.textTertiary),
-          SizedBox(height: 16),
+          Icon(Icons.search_off, size: 64, color: colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             AppStrings.noResults,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildResults(List<SearchResult> results) {
+  Widget _buildResults(List<SearchResult> results, ColorScheme colorScheme) {
     // Agrupar resultados por tipo
-    final materias =
-        results.where((r) => r.tipo == SearchResultType.materia).toList();
-    final salones =
-        results.where((r) => r.tipo == SearchResultType.salon).toList();
-    final profesores =
-        results.where((r) => r.tipo == SearchResultType.profesor).toList();
+    final materias = results
+        .where((r) => r.tipo == SearchResultType.materia)
+        .toList();
+    final salones = results
+        .where((r) => r.tipo == SearchResultType.salon)
+        .toList();
+    final profesores = results
+        .where((r) => r.tipo == SearchResultType.profesor)
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -199,8 +212,9 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
             AppStrings.materias,
             Icons.menu_book,
             materias.length,
+            colorScheme,
           ),
-          ...materias.map((r) => _buildResultTile(r)),
+          ...materias.map((r) => _buildResultTile(r, colorScheme)),
           const SizedBox(height: 16),
         ],
         if (salones.isNotEmpty) ...[
@@ -208,8 +222,9 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
             AppStrings.salon,
             Icons.meeting_room,
             salones.length,
+            colorScheme,
           ),
-          ...salones.map((r) => _buildResultTile(r)),
+          ...salones.map((r) => _buildResultTile(r, colorScheme)),
           const SizedBox(height: 16),
         ],
         if (profesores.isNotEmpty) ...[
@@ -217,24 +232,30 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
             AppStrings.profesores,
             Icons.person,
             profesores.length,
+            colorScheme,
           ),
-          ...profesores.map((r) => _buildResultTile(r)),
+          ...profesores.map((r) => _buildResultTile(r, colorScheme)),
         ],
       ],
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, int count) {
+  Widget _buildSectionHeader(
+    String title,
+    IconData icon,
+    int count,
+    ColorScheme colorScheme,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.primaryRed),
+          Icon(icon, size: 18, color: colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -243,13 +264,13 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               '$count',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),
@@ -259,23 +280,23 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
     );
   }
 
-  Widget _buildResultTile(SearchResult result) {
+  Widget _buildResultTile(SearchResult result, ColorScheme colorScheme) {
     final (icon, color, route) = switch (result.tipo) {
       SearchResultType.materia => (
-          Icons.menu_book,
-          AppColors.getColorForString(result.nombre),
-          '/materia/${Uri.encodeComponent(result.nombre)}',
-        ),
+        Icons.menu_book,
+        AppColors.getColorForString(result.nombre),
+        '/materia/${Uri.encodeComponent(result.nombre)}',
+      ),
       SearchResultType.salon => (
-          Icons.meeting_room,
-          AppColors.getColorForString(result.nombre),
-          '/salon/${Uri.encodeComponent(result.nombre)}',
-        ),
+        Icons.meeting_room,
+        AppColors.getColorForString(result.nombre),
+        '/salon/${Uri.encodeComponent(result.nombre)}',
+      ),
       SearchResultType.profesor => (
-          Icons.person,
-          AppColors.primaryRed,
-          '/profesor/${Uri.encodeComponent(result.nombre)}',
-        ),
+        Icons.person,
+        colorScheme.primary,
+        '/profesor/${Uri.encodeComponent(result.nombre)}',
+      ),
     };
 
     return Card(
@@ -289,8 +310,8 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
           result.tipo == SearchResultType.profesor
               ? result.nombre.normalizeProfesorName()
               : result.nombre,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w500,
           ),
           maxLines: 2,
@@ -299,16 +320,13 @@ class _GlobalSearchPageState extends ConsumerState<GlobalSearchPage> {
         subtitle: result.subtitulo != null
             ? Text(
                 result.subtitulo!,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
                   fontSize: 12,
                 ),
               )
             : null,
-        trailing: const Icon(
-          Icons.chevron_right,
-          color: AppColors.textTertiary,
-        ),
+        trailing: Icon(Icons.chevron_right, color: colorScheme.outline),
         onTap: () => context.push(route),
       ),
     );
