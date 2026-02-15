@@ -14,19 +14,18 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # Estado reactivo y eficiente
-  flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
+  flutter_riverpod: ^3.2.1
   
   # Navegacion declarativa
   go_router: ^14.8.1
   
   # Modelos inmutables con parsing JSON optimizado
-  freezed_annotation: ^2.4.4
+  freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
   
   # Manejo de archivos
   path_provider: ^2.1.5
-  file_picker: ^8.3.7
+  file_picker: ^10.0.0
   
   # Operaciones eficientes en colecciones
   collection: ^1.19.0
@@ -40,10 +39,17 @@ dependencies:
   # Mi Horario - Captura y exportacion de imagen
   screenshot: ^3.0.0
   image_gallery_saver_plus: ^4.0.1
-  share_plus: ^10.1.4
+  share_plus: ^12.0.0
   
   # Persistencia local para configuracion del usuario
   shared_preferences: ^2.3.5
+
+  # Animaciones declarativas
+  flutter_animate: ^4.5.2
+
+  # Notificaciones locales
+  flutter_local_notifications: ^20.1.0
+  timezone: ^0.10.0
 
 dev_dependencies:
   flutter_test:
@@ -53,9 +59,8 @@ dev_dependencies:
   
   # Generadores de codigo
   build_runner: ^2.4.15
-  freezed: ^2.5.8
+  freezed: ^3.0.0
   json_serializable: ^6.9.4
-  riverpod_generator: ^2.6.3
   
   # Generador de iconos
   flutter_launcher_icons: ^0.14.3
