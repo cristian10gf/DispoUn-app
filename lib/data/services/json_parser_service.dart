@@ -96,7 +96,8 @@ class JsonParserService {
       } else {
         // Si no es de un solo dia, agregarlo directamente sin unificar
         // Usamos una clave unica para que no se agrupe
-        final claveUnica = '${_generarClaveHorario(horario)}|${horario.fechaInicio}|${horario.fechaFin}';
+        final claveUnica =
+            '${_generarClaveHorario(horario)}|${horario.fechaInicio}|${horario.fechaFin}';
         grupos[claveUnica] = [horario];
       }
     }

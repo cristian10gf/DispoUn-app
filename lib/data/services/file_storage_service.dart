@@ -170,7 +170,7 @@ class FileStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final paths = prefs.getStringList('active_file_paths');
-      
+
       if (paths == null || paths.isEmpty) {
         return [];
       }
