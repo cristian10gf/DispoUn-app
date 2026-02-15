@@ -5,7 +5,7 @@ part 'mi_horario_config.g.dart';
 
 /// Configuracion del horario personal del usuario
 @freezed
-class MiHorarioConfig with _$MiHorarioConfig {
+abstract class MiHorarioConfig with _$MiHorarioConfig {
   const MiHorarioConfig._();
 
   const factory MiHorarioConfig({

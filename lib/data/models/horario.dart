@@ -1,3 +1,4 @@
+// ignore_for_file: invalid_annotation_target
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'horario.freezed.dart';
@@ -5,7 +6,7 @@ part 'horario.g.dart';
 
 /// Modelo principal que representa un horario de clase
 @freezed
-class Horario with _$Horario {
+abstract class Horario with _$Horario {
   const Horario._();
 
   const factory Horario({
@@ -36,5 +37,7 @@ class Horario with _$Horario {
 
   /// Indica si la materia es virtual (salon NNS o dia Domingo)
   bool get esVirtual =>
-      nombreSalon.toUpperCase() == 'NNS' || dia.toUpperCase() == 'D' || nombreSalon.toUpperCase() == 'VIRT';
+      nombreSalon.toUpperCase() == 'NNS' ||
+      dia.toUpperCase() == 'D' ||
+      nombreSalon.toUpperCase() == 'VIRT';
 }
