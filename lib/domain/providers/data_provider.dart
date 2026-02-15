@@ -10,6 +10,7 @@ class DataState {
   final HorarioRepository? repository;
   final bool isLoading;
   final String? error;
+
   /// Lista de rutas de archivos activos (puede ser uno o varios combinados)
   final List<String> activeFilePaths;
   final List<FileInfo> availableFiles;
@@ -47,8 +48,12 @@ class DataState {
 }
 
 /// Provider principal para el estado de datos
-class DataNotifier extends StateNotifier<DataState> {
-  DataNotifier() : super(const DataState());
+class DataNotifier extends Notifier<DataState> {
+  @override
+  DataState build() {
+    Future.microtask(() => initialize());
+    return const DataState();
+  }
 
   /// Inicializa cargando datos desde assets o archivo guardado
   Future<void> initialize() async {
@@ -61,7 +66,7 @@ class DataNotifier extends StateNotifier<DataState> {
       if (files.isNotEmpty) {
         // Intentar cargar la selección guardada de archivos activos
         final savedActivePaths = await FileStorageService.loadActiveFilePaths();
-        
+
         if (savedActivePaths.isNotEmpty) {
           // Verificar que todos los archivos guardados aún existen
           final validPaths = <String>[];
@@ -114,7 +119,7 @@ class DataNotifier extends StateNotifier<DataState> {
         final files = await FileStorageService.listJsonFiles();
 
         final activePaths = [savedPath];
-        
+
         // Guardar la selección
         await FileStorageService.saveActiveFilePaths(activePaths);
 
@@ -158,10 +163,7 @@ class DataNotifier extends StateNotifier<DataState> {
   /// Carga datos desde multiples archivos (combina la informacion)
   Future<void> loadFromMultipleFiles(List<String> filePaths) async {
     if (filePaths.isEmpty) {
-      state = state.copyWith(
-        repository: null,
-        activeFilePaths: [],
-      );
+      state = state.copyWith(repository: null, activeFilePaths: []);
       return;
     }
 
@@ -324,13 +326,9 @@ class DataNotifier extends StateNotifier<DataState> {
 }
 
 /// Provider del notificador de datos
-final dataNotifierProvider = StateNotifierProvider<DataNotifier, DataState>((
-  ref,
-) {
-  final notifier = DataNotifier();
-  notifier.initialize();
-  return notifier;
-});
+final dataNotifierProvider = NotifierProvider<DataNotifier, DataState>(
+  DataNotifier.new,
+);
 
 /// Provider para acceder al repositorio directamente
 final repositoryProvider = Provider<HorarioRepository?>((ref) {
@@ -362,9 +360,11 @@ final bloquesListProvider = Provider<List<String>>((ref) {
   final repo = ref.watch(repositoryProvider);
   if (repo == null) return [];
   return repo.bloques
-      .where((b) => !_bloquesExcluidos.any(
-            (excluido) => b.toLowerCase().contains(excluido.toLowerCase()),
-          ))
+      .where(
+        (b) => !_bloquesExcluidos.any(
+          (excluido) => b.toLowerCase().contains(excluido.toLowerCase()),
+        ),
+      )
       .toList();
 });
 

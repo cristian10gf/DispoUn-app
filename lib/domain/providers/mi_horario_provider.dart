@@ -40,11 +40,11 @@ class MiHorarioState {
 }
 
 /// Provider para manejar el estado de Mi Horario
-class MiHorarioNotifier extends StateNotifier<MiHorarioState> {
-  final Ref _ref;
-
-  MiHorarioNotifier(this._ref) : super(const MiHorarioState()) {
-    _initialize();
+class MiHorarioNotifier extends Notifier<MiHorarioState> {
+  @override
+  MiHorarioState build() {
+    Future.microtask(() => _initialize());
+    return const MiHorarioState();
   }
 
   /// Inicializa cargando la configuracion guardada
@@ -64,7 +64,7 @@ class MiHorarioNotifier extends StateNotifier<MiHorarioState> {
   /// Agrega un NRC a la lista
   Future<bool> addNrc(int nrc) async {
     // Validar que el NRC existe en los datos
-    final repo = _ref.read(repositoryProvider);
+    final repo = ref.read(repositoryProvider);
     if (repo == null) {
       state = state.copyWith(error: 'No hay datos cargados');
       return false;
@@ -94,7 +94,7 @@ class MiHorarioNotifier extends StateNotifier<MiHorarioState> {
 
   /// Agrega multiples NRCs a la vez
   Future<AddNrcsResult> addMultipleNrcs(List<int> nrcs) async {
-    final repo = _ref.read(repositoryProvider);
+    final repo = ref.read(repositoryProvider);
     if (repo == null) {
       return AddNrcsResult(
         agregados: [],
@@ -161,7 +161,9 @@ class MiHorarioNotifier extends StateNotifier<MiHorarioState> {
   /// Establece si Mi Horario es la pantalla principal
   Future<void> setPantallaPrincipal(bool value) async {
     try {
-      final newConfig = await MiHorarioStorageService.setPantallaPrincipal(value);
+      final newConfig = await MiHorarioStorageService.setPantallaPrincipal(
+        value,
+      );
       state = state.copyWith(config: newConfig, error: null);
     } catch (e) {
       state = state.copyWith(error: 'Error al cambiar configuracion: $e');
@@ -192,9 +194,7 @@ class AddNrcsResult {
 
 /// Provider del notificador de Mi Horario
 final miHorarioNotifierProvider =
-    StateNotifierProvider<MiHorarioNotifier, MiHorarioState>((ref) {
-  return MiHorarioNotifier(ref);
-});
+    NotifierProvider<MiHorarioNotifier, MiHorarioState>(MiHorarioNotifier.new);
 
 /// Provider para obtener los horarios filtrados por NRCs del usuario
 final miHorarioHorariosProvider = Provider<List<Horario>>((ref) {
@@ -213,7 +213,7 @@ final miHorarioHorariosProvider = Provider<List<Horario>>((ref) {
   return horarios;
 });
 
-/// Provider para obtener informacion de un NRC (nombre de materia, profesor, etc)
+/// Provider para obtener informacion de un NRC
 final nrcInfoProvider = Provider.family<NrcInfo?, int>((ref, nrc) {
   final repo = ref.watch(repositoryProvider);
   if (repo == null) return null;

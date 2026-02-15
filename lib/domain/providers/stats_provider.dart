@@ -239,4 +239,3 @@ final salonStatsProvider = Provider.family<Map<String, dynamic>?, String>((
     'bloque': horarios.first.nombreBloque,
   };
 });
-

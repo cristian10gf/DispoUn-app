@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/strings.dart';
 import '../../../domain/providers/data_provider.dart';
 import '../../../domain/providers/mi_horario_provider.dart';
@@ -70,7 +69,7 @@ class _HomePageState extends ConsumerState<HomePage>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabAlignment: TabAlignment.start,
+          tabAlignment: TabAlignment.center,
           tabs: const [
             Tab(
               icon: Icon(Icons.room_outlined),
@@ -115,51 +114,59 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Widget _buildDisponibilidadTab() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Filtros (colapsables)
-          ExpansionTile(
-            initiallyExpanded: true,
-            title: const Text(
-              AppStrings.filtros,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+    return RefreshIndicator(
+      onRefresh: () => ref.read(dataNotifierProvider.notifier).initialize(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // Filtros (colapsables)
+            ExpansionTile(
+              initiallyExpanded: true,
+              title: Text(
+                AppStrings.filtros,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+              leading: Icon(
+                Icons.filter_list,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: AvailabilityFilters(),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            leading: const Icon(Icons.filter_list, color: AppColors.primaryRed),
-            children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: AvailabilityFilters(),
-              ),
-              SizedBox(height: 16),
-            ],
-          ),
-          const Divider(),
-          // Tabla de resultados (sin Expanded, genera los items directamente)
-          AvailabilityTable(
-            onSalonTap: (salon) => context.push('/salon/$salon'),
-          ),
-        ],
+            const Divider(),
+            // Tabla de resultados (sin Expanded, genera los items directamente)
+            AvailabilityTable(
+              onSalonTap: (salon) => context.push('/salon/$salon'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildError(String error) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
             Text(
               error,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 16,
               ),
               textAlign: TextAlign.center,
@@ -179,21 +186,25 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Widget _buildNoData() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.folder_open_outlined,
               size: 64,
-              color: AppColors.textTertiary,
+              color: colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               AppStrings.noData,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 16,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

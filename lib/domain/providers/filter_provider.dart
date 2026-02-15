@@ -64,9 +64,9 @@ class AvailabilityFilterState {
 }
 
 /// Notificador de filtros de disponibilidad
-class AvailabilityFilterNotifier
-    extends StateNotifier<AvailabilityFilterState> {
-  AvailabilityFilterNotifier() : super(AvailabilityFilterState.defaultState());
+class AvailabilityFilterNotifier extends Notifier<AvailabilityFilterState> {
+  @override
+  AvailabilityFilterState build() => AvailabilityFilterState.defaultState();
 
   void setHoraInicio(String hora) {
     state = state.copyWith(horaInicio: hora);
@@ -103,8 +103,8 @@ class AvailabilityFilterNotifier
 
 /// Provider del notificador de filtros
 final availabilityFilterProvider =
-    StateNotifierProvider<AvailabilityFilterNotifier, AvailabilityFilterState>(
-      (ref) => AvailabilityFilterNotifier(),
+    NotifierProvider<AvailabilityFilterNotifier, AvailabilityFilterState>(
+      AvailabilityFilterNotifier.new,
     );
 
 /// Nombres de bloques a excluir
@@ -127,49 +127,85 @@ final salonesDisponiblesProvider = Provider<List<SalonDisponibilidad>>((ref) {
   );
 
   // Filtrar bloques sin especificar
-  var resultado = todosLosSalones.where((s) => !_bloquesExcluidos.any(
-        (excluido) => s.nombreBloque.toLowerCase().contains(excluido.toLowerCase()),
-      )).toList();
+  var resultado = todosLosSalones
+      .where(
+        (s) => !_bloquesExcluidos.any(
+          (excluido) =>
+              s.nombreBloque.toLowerCase().contains(excluido.toLowerCase()),
+        ),
+      )
+      .toList();
 
   // Aplicar filtro de disponibilidad
   switch (filter.disponibilidadFiltro) {
     case DisponibilidadFiltro.disponibles:
       resultado = resultado.where((s) => s.disponible).toList();
-      break;
     case DisponibilidadFiltro.ocupados:
       resultado = resultado.where((s) => !s.disponible).toList();
-      break;
     case DisponibilidadFiltro.todos:
-      // No filtrar
       break;
   }
 
   return resultado;
 });
 
-/// Provider para salones sin filtro de disponibilidad (para contar totales)
-final salonesDisponiblesSinFiltroProvider = Provider<List<SalonDisponibilidad>>((ref) {
-  final repo = ref.watch(repositoryProvider);
-  final filter = ref.watch(availabilityFilterProvider);
+/// Provider para salones sin filtro de disponibilidad
+final salonesDisponiblesSinFiltroProvider = Provider<List<SalonDisponibilidad>>(
+  (ref) {
+    final repo = ref.watch(repositoryProvider);
+    final filter = ref.watch(availabilityFilterProvider);
 
-  if (repo == null) return [];
+    if (repo == null) return [];
 
-  final todosLosSalones = repo.getSalonesDisponibles(
-    horaInicio: filter.horaInicio,
-    horaFin: filter.horaFin,
-    dia: filter.dia,
-    bloque: filter.bloque,
-    incluirOcupados: true,
-  );
+    final todosLosSalones = repo.getSalonesDisponibles(
+      horaInicio: filter.horaInicio,
+      horaFin: filter.horaFin,
+      dia: filter.dia,
+      bloque: filter.bloque,
+      incluirOcupados: true,
+    );
 
-  // Solo filtrar bloques sin especificar
-  return todosLosSalones.where((s) => !_bloquesExcluidos.any(
-        (excluido) => s.nombreBloque.toLowerCase().contains(excluido.toLowerCase()),
-      )).toList();
-});
+    // Solo filtrar bloques sin especificar
+    return todosLosSalones
+        .where(
+          (s) => !_bloquesExcluidos.any(
+            (excluido) =>
+                s.nombreBloque.toLowerCase().contains(excluido.toLowerCase()),
+          ),
+        )
+        .toList();
+  },
+);
+
+/// Notifier generico para estado mutable simple (reemplazo de StateProvider)
+class _StringNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  /// Establece un nuevo valor
+  void set(String value) => state = value;
+}
+
+class _NullableStringNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  /// Establece un nuevo valor
+  void set(String? value) => state = value;
+}
+
+class _NullableIntNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  /// Establece un nuevo valor
+  void set(int? value) => state = value;
+}
 
 /// Provider para busqueda de profesores
-final profesorSearchQueryProvider = StateProvider<String>((ref) => '');
+final profesorSearchQueryProvider = NotifierProvider<_StringNotifier, String>(
+  _StringNotifier.new,
+);
 
 final profesoresFilteredProvider = Provider<List<String>>((ref) {
   final repo = ref.watch(repositoryProvider);
@@ -180,7 +216,9 @@ final profesoresFilteredProvider = Provider<List<String>>((ref) {
 });
 
 /// Provider para busqueda de materias
-final materiaSearchQueryProvider = StateProvider<String>((ref) => '');
+final materiaSearchQueryProvider = NotifierProvider<_StringNotifier, String>(
+  _StringNotifier.new,
+);
 
 final materiasFilteredProvider = Provider<List<String>>((ref) {
   final repo = ref.watch(repositoryProvider);
@@ -191,16 +229,30 @@ final materiasFilteredProvider = Provider<List<String>>((ref) {
 });
 
 /// Provider para profesor seleccionado (para vista de detalle)
-final selectedProfesorProvider = StateProvider<String?>((ref) => null);
+final selectedProfesorProvider =
+    NotifierProvider<_NullableStringNotifier, String?>(
+      _NullableStringNotifier.new,
+    );
 
 /// Provider para materia seleccionada
-final selectedMateriaProvider = StateProvider<String?>((ref) => null);
+final selectedMateriaProvider =
+    NotifierProvider<_NullableStringNotifier, String?>(
+      _NullableStringNotifier.new,
+    );
 
 /// Provider para NRC seleccionado
-final selectedNrcProvider = StateProvider<int?>((ref) => null);
+final selectedNrcProvider = NotifierProvider<_NullableIntNotifier, int?>(
+  _NullableIntNotifier.new,
+);
 
 /// Provider para salon seleccionado
-final selectedSalonProvider = StateProvider<String?>((ref) => null);
+final selectedSalonProvider =
+    NotifierProvider<_NullableStringNotifier, String?>(
+      _NullableStringNotifier.new,
+    );
 
 /// Provider para codigo de conjunto seleccionado
-final selectedCodigoConjuntoProvider = StateProvider<String?>((ref) => null);
+final selectedCodigoConjuntoProvider =
+    NotifierProvider<_NullableStringNotifier, String?>(
+      _NullableStringNotifier.new,
+    );
