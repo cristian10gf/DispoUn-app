@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/strings.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../domain/entities/profesor_stats.dart';
@@ -19,6 +18,7 @@ class ProfesorDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final horarios = ref.watch(horariosProfesorProvider(profesorNombre));
     final stats = ref.watch(profesorStatsProvider(profesorNombre));
 
@@ -34,13 +34,13 @@ class ProfesorDetailPage extends ConsumerWidget {
         ),
       ),
       body: horarios.isEmpty
-          ? _buildNoData()
+          ? _buildNoData(colorScheme)
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Stats del profesor
-                  if (stats != null) _buildStats(stats),
+                  if (stats != null) _buildStats(stats, colorScheme),
 
                   const Divider(),
 
@@ -49,8 +49,8 @@ class ProfesorDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       AppStrings.horarioProfesor,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -75,8 +75,8 @@ class ProfesorDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       '${AppStrings.materias} (${stats?.materias ?? 0})',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -92,7 +92,7 @@ class ProfesorDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStats(ProfesorStats stats) {
+  Widget _buildStats(ProfesorStats stats, ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -103,12 +103,8 @@ class ProfesorDetailPage extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: AppColors.primaryRed.withValues(alpha: 0.2),
-                child: const Icon(
-                  Icons.person,
-                  size: 32,
-                  color: AppColors.primaryRed,
-                ),
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+                child: Icon(Icons.person, size: 32, color: colorScheme.primary),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -117,8 +113,8 @@ class ProfesorDetailPage extends ConsumerWidget {
                   children: [
                     Text(
                       profesorNombre.normalizeProfesorName(),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -126,8 +122,8 @@ class ProfesorDetailPage extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       AppStrings.profesor,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 14,
                       ),
                     ),
@@ -181,20 +177,16 @@ class ProfesorDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNoData() {
-    return const Center(
+  Widget _buildNoData(ColorScheme colorScheme) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.person_off_outlined,
-            size: 64,
-            color: AppColors.textTertiary,
-          ),
-          SizedBox(height: 16),
+          Icon(Icons.person_off_outlined, size: 64, color: colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             AppStrings.sinHorario,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
         ],
       ),

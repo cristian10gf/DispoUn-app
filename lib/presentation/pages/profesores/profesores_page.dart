@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/strings.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../domain/providers/data_provider.dart';
@@ -33,12 +33,13 @@ class ProfesoresPage extends ConsumerWidget {
         ],
       ),
       body: dataState.repository == null
-          ? _buildNoData(context)
+          ? _buildNoData(context, Theme.of(context).colorScheme)
           : _buildContent(context, ref),
     );
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final searchQuery = ref.watch(profesorSearchQueryProvider);
     final profesoresFiltrados = ref.watch(profesoresFilteredProvider);
     final topProfesores = ref.watch(topProfesoresProvider);
@@ -54,29 +55,29 @@ class ProfesoresPage extends ConsumerWidget {
             child: DebouncedSearchInput(
               hintText: AppStrings.buscarProfesor,
               onChanged: (value) {
-                ref.read(profesorSearchQueryProvider.notifier).state = value;
+                ref.read(profesorSearchQueryProvider.notifier).set(value);
               },
             ),
           ),
 
           // Resultados de busqueda o top profesores
           if (searchQuery.isNotEmpty) ...[
-            _buildSearchResults(context, profesoresFiltrados),
+            _buildSearchResults(context, profesoresFiltrados, colorScheme),
           ] else ...[
             // Top profesores
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppStrings.topProfesores,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            _buildTopProfesores(context, topProfesores),
+            _buildTopProfesores(context, topProfesores, colorScheme),
 
             const SizedBox(height: 24),
             const Divider(),
@@ -87,8 +88,8 @@ class ProfesoresPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppStrings.seleccionarProfesor,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -104,18 +105,22 @@ class ProfesoresPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSearchResults(BuildContext context, List<String> profesores) {
+  Widget _buildSearchResults(
+    BuildContext context,
+    List<String> profesores,
+    ColorScheme colorScheme,
+  ) {
     if (profesores.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: const EdgeInsets.all(32),
           child: Column(
             children: [
-              Icon(Icons.search_off, size: 48, color: AppColors.textTertiary),
-              SizedBox(height: 16),
+              Icon(Icons.search_off, size: 48, color: colorScheme.outline),
+              const SizedBox(height: 16),
               Text(
                 AppStrings.noResults,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -132,17 +137,14 @@ class ProfesoresPage extends ConsumerWidget {
         final profesor = profesores[index];
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: AppColors.primaryRed.withValues(alpha: 0.2),
-            child: const Icon(Icons.person, color: AppColors.primaryRed),
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+            child: Icon(Icons.person, color: colorScheme.primary),
           ),
           title: Text(
             profesor.normalizeProfesorName(),
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: colorScheme.onSurface),
           ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textTertiary,
-          ),
+          trailing: Icon(Icons.chevron_right, color: colorScheme.outline),
           onTap: () =>
               context.push('/profesor/${Uri.encodeComponent(profesor)}'),
         );
@@ -150,7 +152,11 @@ class ProfesoresPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopProfesores(BuildContext context, List topProfesores) {
+  Widget _buildTopProfesores(
+    BuildContext context,
+    List topProfesores,
+    ColorScheme colorScheme,
+  ) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -159,69 +165,70 @@ class ProfesoresPage extends ConsumerWidget {
       itemBuilder: (context, index) {
         final stats = topProfesores[index];
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: InkWell(
-            onTap: () =>
-                context.push('/profesor/${Uri.encodeComponent(stats.nombre)}'),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // Posicion
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: _getPositionColor(index),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+              margin: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () => context.push(
+                  '/profesor/${Uri.encodeComponent(stats.nombre)}',
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      // Posicion
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _getPositionColor(index, colorScheme),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          stats.nombre.toString().normalizeProfesorName(),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 12),
+                      // Info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              stats.nombre.toString().normalizeProfesorName(),
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${stats.clases} clases | ${stats.nrcs} NRCs | ${stats.materias} materias',
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${stats.clases} clases | ${stats.nrcs} NRCs | ${stats.materias} materias',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      Icon(Icons.chevron_right, color: colorScheme.outline),
+                    ],
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textTertiary,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-        );
+            )
+            .animate()
+            .fadeIn(delay: (50 * index.clamp(0, 10)).ms, duration: 300.ms)
+            .slideX(begin: 0.05, end: 0, delay: (50 * index.clamp(0, 10)).ms);
       },
     );
   }
@@ -257,7 +264,7 @@ class ProfesoresPage extends ConsumerWidget {
     );
   }
 
-  Color _getPositionColor(int index) {
+  Color _getPositionColor(int index, ColorScheme colorScheme) {
     switch (index) {
       case 0:
         return const Color(0xFFFFD700); // Oro
@@ -266,24 +273,24 @@ class ProfesoresPage extends ConsumerWidget {
       case 2:
         return const Color(0xFFCD7F32); // Bronce
       default:
-        return AppColors.surfaceVariant;
+        return colorScheme.surfaceContainerHighest;
     }
   }
 
-  Widget _buildNoData(BuildContext context) {
+  Widget _buildNoData(BuildContext context, ColorScheme colorScheme) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.folder_open_outlined,
             size: 64,
-            color: AppColors.textTertiary,
+            color: colorScheme.outline,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             AppStrings.noData,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
