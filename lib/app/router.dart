@@ -59,52 +59,172 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/salon/:nombre',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final nombre = state.pathParameters['nombre']!;
-        return SalonDetailPage(salonNombre: nombre);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: SalonDetailPage(salonNombre: nombre),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: child,
+            );
+          },
+        );
       },
     ),
     GoRoute(
       path: '/profesor/:nombre',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final nombre = state.pathParameters['nombre']!;
-        return ProfesorDetailPage(profesorNombre: nombre);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ProfesorDetailPage(profesorNombre: nombre),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: child,
+            );
+          },
+        );
       },
     ),
     GoRoute(
       path: '/materia/:nombre',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final nombre = state.pathParameters['nombre']!;
-        return MateriaDetailPage(materiaNombre: nombre);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: MateriaDetailPage(materiaNombre: nombre),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: child,
+            );
+          },
+        );
       },
     ),
     GoRoute(
       path: '/nrc/:nrc',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final nrc = int.parse(state.pathParameters['nrc']!);
-        return NrcDetailPage(nrc: nrc);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: NrcDetailPage(nrc: nrc),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: child,
+            );
+          },
+        );
       },
     ),
     GoRoute(
       path: '/conjunto/:codigo',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final codigo = state.pathParameters['codigo']!;
-        return ConjuntoPage(codigoConjunto: codigo);
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ConjuntoPage(codigoConjunto: codigo),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: child,
+            );
+          },
+        );
       },
     ),
     GoRoute(
       path: '/settings',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const SettingsPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const SettingsPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+            child: child,
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/search',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const GlobalSearchPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const GlobalSearchPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+            child: child,
+          );
+        },
+      ),
     ),
   ],
 );
