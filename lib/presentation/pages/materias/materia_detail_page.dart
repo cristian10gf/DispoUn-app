@@ -19,6 +19,7 @@ class MateriaDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final horarios = ref.watch(horariosMateriaProvider(materiaNombre));
     final stats = ref.watch(materiaStatsProvider(materiaNombre));
 
@@ -31,13 +32,13 @@ class MateriaDetailPage extends ConsumerWidget {
         ),
       ),
       body: horarios.isEmpty
-          ? _buildNoData()
+          ? _buildNoData(colorScheme)
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Stats de la materia
-                  if (stats != null) _buildStats(stats, context),
+                  if (stats != null) _buildStats(stats, context, colorScheme),
 
                   const Divider(),
 
@@ -46,8 +47,8 @@ class MateriaDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       AppStrings.horarioMateria,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -72,8 +73,8 @@ class MateriaDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       '${AppStrings.nrcs} disponibles (${stats?.nrcs ?? 0})',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -89,15 +90,19 @@ class MateriaDetailPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       '${AppStrings.profesores} (${stats?.profesores ?? 0})',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
 
-                  _buildProfesoresList(stats?.profesoresSet ?? {}, context),
+                  _buildProfesoresList(
+                    stats?.profesoresSet ?? {},
+                    context,
+                    colorScheme,
+                  ),
 
                   const SizedBox(height: 32),
                 ],
@@ -106,7 +111,11 @@ class MateriaDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStats(MateriaStats stats, BuildContext context) {
+  Widget _buildStats(
+    MateriaStats stats,
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
     final color = AppColors.getColorForString(materiaNombre);
 
     return Padding(
@@ -136,13 +145,13 @@ class MateriaDetailPage extends ConsumerWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
+                        color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         stats.codigoConjunto,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -151,8 +160,8 @@ class MateriaDetailPage extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       materiaNombre,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -207,7 +216,11 @@ class MateriaDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfesoresList(Set<String> profesores, BuildContext context) {
+  Widget _buildProfesoresList(
+    Set<String> profesores,
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
     final lista = profesores.toList()..sort();
 
     return ListView.builder(
@@ -219,21 +232,14 @@ class MateriaDetailPage extends ConsumerWidget {
         final profesor = lista[index];
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: AppColors.primaryRed.withValues(alpha: 0.2),
-            child: const Icon(
-              Icons.person,
-              color: AppColors.primaryRed,
-              size: 20,
-            ),
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+            child: Icon(Icons.person, color: colorScheme.primary, size: 20),
           ),
           title: Text(
             profesor.normalizeProfesorName(),
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
           ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textTertiary,
-          ),
+          trailing: Icon(Icons.chevron_right, color: colorScheme.outline),
           onTap: () =>
               context.push('/profesor/${Uri.encodeComponent(profesor)}'),
         );
@@ -241,20 +247,16 @@ class MateriaDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNoData() {
-    return const Center(
+  Widget _buildNoData(ColorScheme colorScheme) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.menu_book_outlined,
-            size: 64,
-            color: AppColors.textTertiary,
-          ),
-          SizedBox(height: 16),
+          Icon(Icons.menu_book_outlined, size: 64, color: colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             AppStrings.sinHorario,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
         ],
       ),

@@ -16,6 +16,7 @@ class ConjuntoPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final horarios = ref.watch(horariosCodigoConjuntoProvider(codigoConjunto));
 
     if (horarios.isEmpty) {
@@ -27,7 +28,7 @@ class ConjuntoPage extends ConsumerWidget {
             onPressed: () => context.pop(),
           ),
         ),
-        body: _buildNoData(),
+        body: _buildNoData(colorScheme),
       );
     }
 
@@ -98,8 +99,8 @@ class ConjuntoPage extends ConsumerWidget {
                       children: [
                         Text(
                           '${AppStrings.codigoConjunto}: $codigoConjunto',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -107,8 +108,8 @@ class ConjuntoPage extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           '${horarios.length} clases registradas',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 14,
                           ),
                         ),
@@ -149,8 +150,8 @@ class ConjuntoPage extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Text(
                 AppStrings.horarioSemanal,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -173,15 +174,15 @@ class ConjuntoPage extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Text(
                 '${AppStrings.materias} (${materiasUnicas.length})',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
 
-            _buildMateriasList(materiasUnicas.toList(), context),
+            _buildMateriasList(materiasUnicas.toList(), context, colorScheme),
 
             const SizedBox(height: 32),
           ],
@@ -190,7 +191,11 @@ class ConjuntoPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMateriasList(List<String> materias, BuildContext context) {
+  Widget _buildMateriasList(
+    List<String> materias,
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
     materias.sort();
 
     return ListView.builder(
@@ -208,28 +213,25 @@ class ConjuntoPage extends ConsumerWidget {
           ),
           title: Text(
             materia,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
           ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textTertiary,
-          ),
+          trailing: Icon(Icons.chevron_right, color: colorScheme.outline),
           onTap: () => context.push('/materia/${Uri.encodeComponent(materia)}'),
         );
       },
     );
   }
 
-  Widget _buildNoData() {
-    return const Center(
+  Widget _buildNoData(ColorScheme colorScheme) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.textTertiary),
-          SizedBox(height: 16),
+          Icon(Icons.search_off, size: 64, color: colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             AppStrings.noResults,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
         ],
       ),

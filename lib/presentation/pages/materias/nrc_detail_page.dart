@@ -18,6 +18,7 @@ class NrcDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final horarios = ref.watch(horariosNrcProvider(nrc));
 
     if (horarios.isEmpty) {
@@ -29,7 +30,7 @@ class NrcDetailPage extends ConsumerWidget {
             onPressed: () => context.pop(),
           ),
         ),
-        body: _buildNoData(),
+        body: _buildNoData(colorScheme),
       );
     }
 
@@ -132,8 +133,8 @@ class NrcDetailPage extends ConsumerWidget {
                   // Nombre de la materia
                   Text(
                     primerHorario.nombreMateria,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -143,17 +144,17 @@ class NrcDetailPage extends ConsumerWidget {
                   // Departamento
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.business,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           primerHorario.departamento,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 14,
                           ),
                         ),
@@ -165,10 +166,10 @@ class NrcDetailPage extends ConsumerWidget {
                   // Profesor
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.person,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -178,8 +179,8 @@ class NrcDetailPage extends ConsumerWidget {
                           ),
                           child: Text(
                             primerHorario.profesor.normalizeProfesorName(),
-                            style: const TextStyle(
-                              color: AppColors.primaryRed,
+                            style: TextStyle(
+                              color: colorScheme.primary,
                               fontSize: 14,
                               decoration: TextDecoration.underline,
                             ),
@@ -228,18 +229,25 @@ class NrcDetailPage extends ConsumerWidget {
                       _buildInfoRow(
                         AppStrings.modalidad,
                         primerHorario.modalidad,
+                        colorScheme,
                       ),
                       const Divider(),
-                      _buildInfoRow(AppStrings.nivel, primerHorario.nivel),
+                      _buildInfoRow(
+                        AppStrings.nivel,
+                        primerHorario.nivel,
+                        colorScheme,
+                      ),
                       const Divider(),
                       _buildInfoRow(
                         AppStrings.matriculados,
                         '${primerHorario.matriculados}',
+                        colorScheme,
                       ),
                       const Divider(),
                       _buildInfoRow(
                         'Cupos restantes',
                         '${primerHorario.cupos}',
+                        colorScheme,
                       ),
                     ],
                   ),
@@ -255,8 +263,8 @@ class NrcDetailPage extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Text(
                 '${AppStrings.horario} (${horarios.length} sesiones)',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -264,7 +272,7 @@ class NrcDetailPage extends ConsumerWidget {
             ),
 
             // Lista de sesiones
-            _buildSesionesList(horarios, context),
+            _buildSesionesList(horarios, context, colorScheme),
 
             const SizedBox(height: 16),
 
@@ -273,8 +281,8 @@ class NrcDetailPage extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Text(
                 AppStrings.horarioSemanal,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -298,7 +306,7 @@ class NrcDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -306,15 +314,12 @@ class NrcDetailPage extends ConsumerWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -324,7 +329,11 @@ class NrcDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSesionesList(List horarios, BuildContext context) {
+  Widget _buildSesionesList(
+    List horarios,
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -342,7 +351,7 @@ class NrcDetailPage extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: sesionVirtual
                     ? Colors.purple.withValues(alpha: 0.1)
-                    : AppColors.primaryRed.withValues(alpha: 0.1),
+                    : colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -350,8 +359,8 @@ class NrcDetailPage extends ConsumerWidget {
                     ? const Icon(Icons.cloud, color: Colors.purple, size: 24)
                     : Text(
                         h.dia.toString().toDiaCompleto().substring(0, 3),
-                        style: const TextStyle(
-                          color: AppColors.primaryRed,
+                        style: TextStyle(
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -359,8 +368,8 @@ class NrcDetailPage extends ConsumerWidget {
             ),
             title: Text(
               '${TimeUtils.formatTime(h.horaInicio)} - ${TimeUtils.formatTime(h.horaFin)}',
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -371,8 +380,8 @@ class NrcDetailPage extends ConsumerWidget {
                     sesionVirtual
                         ? '${h.dia.toString().toDiaCompleto()} - ${AppStrings.virtual}'
                         : '${h.nombreSalon} - ${h.nombreBloque}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -410,26 +419,23 @@ class NrcDetailPage extends ConsumerWidget {
                         children: [
                           Text(
                             _formatDateString(h.fechaInicio),
-                            style: const TextStyle(
-                              color: AppColors.textTertiary,
+                            style: TextStyle(
+                              color: colorScheme.outline,
                               fontSize: 10,
                             ),
                           ),
                           if (h.fechaInicio != h.fechaFin)
                             Text(
                               _formatDateString(h.fechaFin),
-                              style: const TextStyle(
-                                color: AppColors.textTertiary,
+                              style: TextStyle(
+                                color: colorScheme.outline,
                                 fontSize: 10,
                               ),
                             ),
                         ],
                       ),
                       const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.textTertiary,
-                      ),
+                      Icon(Icons.chevron_right, color: colorScheme.outline),
                     ],
                   ),
             onTap: sesionVirtual
@@ -443,16 +449,16 @@ class NrcDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNoData() {
-    return const Center(
+  Widget _buildNoData(ColorScheme colorScheme) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.textTertiary),
-          SizedBox(height: 16),
+          Icon(Icons.search_off, size: 64, color: colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             AppStrings.nrcNoEncontrado,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
         ],
       ),

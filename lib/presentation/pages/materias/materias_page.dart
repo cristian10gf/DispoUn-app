@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,12 +34,13 @@ class MateriasPage extends ConsumerWidget {
         ],
       ),
       body: dataState.repository == null
-          ? _buildNoData(context)
+          ? _buildNoData(context, Theme.of(context).colorScheme)
           : _buildContent(context, ref),
     );
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final searchQuery = ref.watch(materiaSearchQueryProvider);
     final materiasFiltradas = ref.watch(materiasFilteredProvider);
     final topMaterias = ref.watch(topMateriasProvider);
@@ -56,32 +58,38 @@ class MateriasPage extends ConsumerWidget {
             child: DebouncedSearchInput(
               hintText: AppStrings.buscarMateria,
               onChanged: (value) {
-                ref.read(materiaSearchQueryProvider.notifier).state = value;
+                ref.read(materiaSearchQueryProvider.notifier).set(value);
               },
             ),
           ),
 
           // Resultados de busqueda o contenido normal
           if (searchQuery.isNotEmpty) ...[
-            _buildSearchResults(context, materiasFiltradas),
+            _buildSearchResults(context, materiasFiltradas, colorScheme),
           ] else ...[
             // Estadisticas generales de materias
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: StatsRow(
-                items: [
-                  StatItem(
-                    label: AppStrings.materias,
-                    value: '${stats.totalMaterias}',
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: StatsRow(
+                    items: [
+                      StatItem(
+                        label: AppStrings.materias,
+                        value: '${stats.totalMaterias}',
+                      ),
+                      StatItem(
+                        label: AppStrings.nrcs,
+                        value: '${stats.totalNrcs}',
+                      ),
+                      StatItem(
+                        label: AppStrings.profesores,
+                        value: '${stats.totalProfesores}',
+                      ),
+                    ],
                   ),
-                  StatItem(label: AppStrings.nrcs, value: '${stats.totalNrcs}'),
-                  StatItem(
-                    label: AppStrings.profesores,
-                    value: '${stats.totalProfesores}',
-                  ),
-                ],
-              ),
-            ),
+                )
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.03, end: 0, duration: 300.ms),
 
             const SizedBox(height: 24),
 
@@ -90,15 +98,15 @@ class MateriasPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppStrings.topMaterias,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            _buildTopMaterias(context, topMaterias),
+            _buildTopMaterias(context, topMaterias, colorScheme),
 
             const SizedBox(height: 24),
             const Divider(),
@@ -109,8 +117,8 @@ class MateriasPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppStrings.seleccionarMateria,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -126,8 +134,8 @@ class MateriasPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 AppStrings.verPorConjunto,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -141,7 +149,7 @@ class MateriasPage extends ConsumerWidget {
             // Consultar NRC
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildNrcConsultaCard(context),
+              child: _buildNrcConsultaCard(context, colorScheme),
             ),
           ],
 
@@ -151,18 +159,22 @@ class MateriasPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSearchResults(BuildContext context, List<String> materias) {
+  Widget _buildSearchResults(
+    BuildContext context,
+    List<String> materias,
+    ColorScheme colorScheme,
+  ) {
     if (materias.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: const EdgeInsets.all(32),
           child: Column(
             children: [
-              Icon(Icons.search_off, size: 48, color: AppColors.textTertiary),
-              SizedBox(height: 16),
+              Icon(Icons.search_off, size: 48, color: colorScheme.outline),
+              const SizedBox(height: 16),
               Text(
                 AppStrings.noResults,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -183,21 +195,19 @@ class MateriasPage extends ConsumerWidget {
             backgroundColor: color.withValues(alpha: 0.2),
             child: Icon(Icons.menu_book, color: color),
           ),
-          title: Text(
-            materia,
-            style: const TextStyle(color: AppColors.textPrimary),
-          ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textTertiary,
-          ),
+          title: Text(materia, style: TextStyle(color: colorScheme.onSurface)),
+          trailing: Icon(Icons.chevron_right, color: colorScheme.outline),
           onTap: () => context.push('/materia/${Uri.encodeComponent(materia)}'),
         );
       },
     );
   }
 
-  Widget _buildTopMaterias(BuildContext context, List topMaterias) {
+  Widget _buildTopMaterias(
+    BuildContext context,
+    List topMaterias,
+    ColorScheme colorScheme,
+  ) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -207,82 +217,83 @@ class MateriasPage extends ConsumerWidget {
         final stats = topMaterias[index];
         final color = AppColors.getColorForString(stats.nombre);
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: InkWell(
-            onTap: () =>
-                context.push('/materia/${Uri.encodeComponent(stats.nombre)}'),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // Color indicator
-                  Container(
-                    width: 8,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                onTap: () => context.push(
+                  '/materia/${Uri.encodeComponent(stats.nombre)}',
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      // Color indicator
+                      Container(
+                        width: 8,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceVariant,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                stats.codigoConjunto,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    stats.codigoConjunto,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              stats.nombre,
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${stats.nrcs} NRCs | ${stats.profesores} profesores | ${stats.cuposTotales} cupos',
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          stats.nombre,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${stats.nrcs} NRCs | ${stats.profesores} profesores | ${stats.cuposTotales} cupos',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      Icon(Icons.chevron_right, color: colorScheme.outline),
+                    ],
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textTertiary,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-        );
+            )
+            .animate()
+            .fadeIn(delay: (50 * index.clamp(0, 10)).ms, duration: 300.ms)
+            .slideX(begin: 0.05, end: 0, delay: (50 * index.clamp(0, 10)).ms);
       },
     );
   }
@@ -331,17 +342,17 @@ class MateriasPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNrcConsultaCard(BuildContext context) {
+  Widget _buildNrcConsultaCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       child: InkWell(
         onTap: () => _showNrcDialog(context),
         borderRadius: BorderRadius.circular(12),
-        child: const Padding(
-          padding: EdgeInsets.all(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.numbers, color: AppColors.primaryRed, size: 32),
-              SizedBox(width: 16),
+              Icon(Icons.numbers, color: colorScheme.primary, size: 32),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,23 +360,23 @@ class MateriasPage extends ConsumerWidget {
                     Text(
                       AppStrings.consultarNrc,
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Busca informacion de una clase por su numero de NRC',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: AppColors.textTertiary),
+              Icon(Icons.chevron_right, color: colorScheme.outline),
             ],
           ),
         ),
@@ -409,20 +420,20 @@ class MateriasPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNoData(BuildContext context) {
+  Widget _buildNoData(BuildContext context, ColorScheme colorScheme) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.folder_open_outlined,
             size: 64,
-            color: AppColors.textTertiary,
+            color: colorScheme.outline,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             AppStrings.noData,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -435,4 +446,3 @@ class MateriasPage extends ConsumerWidget {
     );
   }
 }
-
