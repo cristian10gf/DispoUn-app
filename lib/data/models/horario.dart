@@ -3,6 +3,13 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'horario.freezed.dart';
 part 'horario.g.dart';
 
+String? _pisoFromJson(dynamic value) {
+  if (value == null) return null;
+  return value.toString();
+}
+
+dynamic _pisoToJson(String? value) => value;
+
 /// Modelo principal que representa un horario de clase
 @freezed
 class Horario with _$Horario {
@@ -21,6 +28,7 @@ class Horario with _$Horario {
     required String modalidad,
     @JsonKey(name: 'nombre_bloque') required String nombreBloque,
     @JsonKey(name: 'nombre_salon') required String nombreSalon,
+    @JsonKey(fromJson: _pisoFromJson, toJson: _pisoToJson)
     String? piso,
     required String profesor,
     required String dia,
